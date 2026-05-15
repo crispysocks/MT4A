@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mt4a Agent</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chat { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        #input { width: 100%; padding: 10px; margin-bottom: 10px; }
+        .message { margin: 10px 0; }
+        .user { color: blue; }
+        .assistant { color: green; }
+    </style>
+</head>
+<body>
+    <h1>mt4a Agent</h1>
+    <div id="chat"></div>
+    <input type="text" id="input" placeholder="Type your message..." />
+    <button onclick="send()">Send</button>
+    <script src="app.js"></script>
+</body>
+</html>

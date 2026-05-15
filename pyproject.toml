@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mt4a"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.102.0",
+    "chromadb>=1.5.9",
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "mysql-connector-python>=9.7.0",
+    "python-dotenv>=1.2.2",
+    "sqlmodel>=0.0.38",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

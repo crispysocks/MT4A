@@ -10,9 +10,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.102.0",
+    "chromadb>=1.5.9",
     "fastapi>=0.136.1",
     "httpx>=0.28.1",
+    "mysql-connector-python>=9.7.0",
     "python-dotenv>=1.2.2",
+    "sqlmodel>=0.0.38",
 ]
 
 [dependency-groups]

@@ -29,8 +29,11 @@ async def chat(request: Request):
 
             for event in response:
                 if event.type == "content_block_delta":
-                    text = event.delta.text if hasattr(event, 'delta') else str(event)
-                    yield f"data: {json.dumps({'type': 'content', 'content': text})}\n\n"
+                    try:
+                        text = event.delta.text
+                        yield f"data: {json.dumps({'type': 'content', 'content': text})}\n\n"
+                    except AttributeError:
+                        pass
 
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
         except Exception as e:

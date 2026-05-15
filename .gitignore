@@ -10,3 +10,7 @@ wheels/
 .venv
 
 references.worktrees/
+
+.conversations
+
+.claude

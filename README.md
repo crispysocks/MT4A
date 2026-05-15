@@ -34,7 +34,8 @@ app/
 │       └── db.py        # 数据库查询
 ├── db/                   # 数据库层
 │   ├── models.py        # SQLModel 模型
-│   └── connection.py   # MySQL 连接管理
+│   ├── connection.py   # MySQL 连接管理
+│   └── init_db.sql     # 数据库初始化脚本
 └── rag/                  # RAG 层
     ├── embedder.py     # DashScope Embedding
     └── store.py        # Chroma 向量存储
@@ -159,6 +160,18 @@ registry.register("my_tool", my_handler, {"type": "object"}, "My tool")
 ### 数据库模型
 
 项目包含三个主要模型：`Course`（课程）、`Event`（活动）、`Registration`（报名）。
+
+初始化数据库：
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4
+```
+
+```sql
+source app/db/init_db.sql;
+```
+
+> **注意**：必须使用 `--default-character-set=utf8mb4` 参数连接 MySQL，否则插入中文数据时会报 `ERROR 1366 (HY000): Incorrect string value` 错误。
 
 ### RAG 知识库
 

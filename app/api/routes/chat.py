@@ -7,7 +7,10 @@ router = APIRouter()
 
 @router.post("/chat")
 async def chat(request: Request):
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
     messages = body.get("messages", [])
 
     async def event_stream():

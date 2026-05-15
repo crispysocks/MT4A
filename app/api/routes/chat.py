@@ -13,7 +13,6 @@ async def chat(request: Request):
     async def event_stream():
         from app.agent.core import client, MODEL, SYSTEM
         from app.agent.tools import registry
-        from anthropic import ALL_STOP_REASONS
 
         try:
             response = client.messages.create(

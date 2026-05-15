@@ -21,6 +21,7 @@ async function send() {
     sendBtn.disabled = true;
     
     const assistantDiv = appendMessage('assistant', '');
+    showLoading(assistantDiv);
     let assistantText = '';
 
     try {
@@ -48,6 +49,7 @@ async function send() {
                         if (data.type === 'conversation_id') {
                             currentConversationId = data.conversation_id;
                         } else if (data.type === 'content') {
+                            hideLoading(assistantDiv);
                             assistantText += data.content;
                             assistantDiv.textContent = assistantText;
                             scrollToBottom();
@@ -81,6 +83,21 @@ function appendMessage(role, text) {
 // 滚动到底部
 function scrollToBottom() {
     chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+// 显示加载动画
+function showLoading(container) {
+    const dots = document.createElement('div');
+    dots.className = 'loading-dots';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    container.appendChild(dots);
+    scrollToBottom();
+}
+
+// 隐藏加载动画
+function hideLoading(container) {
+    const dots = container.querySelector('.loading-dots');
+    if (dots) dots.remove();
 }
 
 // 隐藏空状态

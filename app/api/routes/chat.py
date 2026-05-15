@@ -1,14 +1,18 @@
 import json
-import uuid
-from datetime import datetime, timezone
+import asyncio
 from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
+
+from app.agent.session import SessionManager
+from app.agent.core import agent_loop
 
 router = APIRouter()
 
 CONVERSATIONS_DIR = Path(".conversations")
 CONVERSATIONS_DIR.mkdir(exist_ok=True)
+
+session_manager = SessionManager(CONVERSATIONS_DIR)
 
 
 @router.post("/chat")
@@ -17,48 +21,61 @@ async def chat(request: Request):
         body = await request.json()
     except Exception:
         body = {}
-    messages = body.get("messages", [])
-
+    
+    message = body.get("message", "")
+    conversation_id = body.get("conversation_id")
+    
+    # 加载或创建会话
+    if conversation_id:
+        messages = session_manager.get_session(conversation_id)
+        if messages is None:
+            conversation_id = session_manager.create_session()
+            messages = session_manager.get_session(conversation_id)
+    else:
+        conversation_id = session_manager.create_session()
+        messages = session_manager.get_session(conversation_id)
+    
+    # 追加用户消息
+    messages.append({"role": "user", "content": message})
+    
+    # 使用 asyncio.Queue 实现真正的流式传输
+    queue = asyncio.Queue()
+    
+    def stream_callback(text: str):
+        asyncio.get_event_loop().call_soon_threadsafe(
+            queue.put_nowait, {"type": "content", "content": text}
+        )
+    
     async def event_stream():
-        from app.agent.core import client, MODEL, SYSTEM
-        from app.agent.tools import registry
-
-        conversation_id = str(uuid.uuid4())
-        collected_content = []
-
-        try:
-            response = client.messages.create(
-                model=MODEL,
-                system=SYSTEM,
-                messages=messages,
-                tools=registry.list(),
-                max_tokens=8000,
-                stream=True
-            )
-
-            for event in response:
-                if event.type == "content_block_delta":
-                    try:
-                        text = event.delta.text
-                        collected_content.append(text)
-                        yield f"data: {json.dumps({'type': 'content', 'content': text})}\n\n"
-                    except AttributeError:
-                        pass
-
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
-
-            # Save conversation log after streaming completes
-            assistant_message = "".join(collected_content)
-            log = {
-                "id": conversation_id,
-                "model": MODEL,
-                "messages": messages + [{"role": "assistant", "content": assistant_message}],
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-            log_path = CONVERSATIONS_DIR / f"{conversation_id}.json"
-            log_path.write_text(json.dumps(log, indent=2, ensure_ascii=False))
-
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+        import threading
+        
+        # 在后台线程运行 agent_loop
+        def run_agent():
+            try:
+                agent_loop(messages, stream_callback=stream_callback)
+            except Exception as e:
+                queue.put_nowait({"type": "error", "content": str(e)})
+            finally:
+                queue.put_nowait({"type": "done"})
+        
+        thread = threading.Thread(target=run_agent, daemon=True)
+        thread.start()
+        
+        # 发送 conversation_id
+        yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
+        
+        # 从队列读取并发送
+        while True:
+            item = await queue.get()
+            if item["type"] == "done":
+                # 保存会话
+                session_manager.save_session(conversation_id)
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                break
+            elif item["type"] == "error":
+                yield f"data: {json.dumps({'type': 'error', 'content': item['content']})}\n\n"
+                break
+            else:
+                yield f"data: {json.dumps(item)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

@@ -1,32 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mt4a Agent</title>
     <style>
-        body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
-        #sidebar { width: 250px; background: #f5f5f5; padding: 10px; overflow-y: auto; border-right: 1px solid #ddd; }
-        #sidebar h3 { margin: 0 0 10px 0; font-size: 16px; }
-        #sidebar .session-item { padding: 8px; cursor: pointer; border-radius: 4px; margin: 4px 0; }
-        #sidebar .session-item:hover { background: #e0e0e0; }
-        #sidebar .session-item.active { background: #d0d0ff; }
-        #sidebar button { width: 100%; padding: 8px; margin-top: 10px; cursor: pointer; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; height: 100vh; display: flex; overflow: hidden; }
+        
+        /* 侧边栏 */
+        #sidebar { width: 260px; background: #f7f7f8; border-right: 1px solid #e5e5e5; display: flex; flex-direction: column; }
+        #sidebar-header { padding: 12px; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; justify-content: space-between; }
+        #sidebar-header h1 { font-size: 16px; font-weight: 600; }
+        #new-chat-btn { padding: 6px 12px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
+        #new-chat-btn:hover { background: #f0f0f0; }
+        #session-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .session-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .session-item:hover { background: #e8e8e8; }
+        .session-item.active { background: #e3f2fd; color: #1976d2; }
+        .empty-state { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+        
+        /* 主区域 */
         #main { flex: 1; display: flex; flex-direction: column; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; }
-        .message { margin: 10px 0; padding: 10px; border-radius: 8px; }
-        .message.user { background: #e3f2fd; }
-        .message.assistant { background: #f5f5f5; }
-        #input-container { display: flex; padding: 10px; border-top: 1px solid #ddd; }
-        #input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        #send { padding: 10px 20px; margin-left: 10px; cursor: pointer; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        
+        /* 消息气泡 */
+        .message { max-width: 70%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+        .message.user { align-self: flex-end; background: #e3f2fd; border-bottom-right-radius: 4px; }
+        .message.assistant { align-self: flex-start; background: #f5f5f5; border-bottom-left-radius: 4px; }
+        .message .role { font-weight: 600; margin-bottom: 4px; font-size: 12px; opacity: 0.7; }
+        
+        /* 空聊天状态 */
+        #chat-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 16px; }
+        
+        /* 输入区域 */
+        #input-container { padding: 16px; border-top: 1px solid #e5e5e5; display: flex; gap: 8px; background: #fff; }
+        #input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; resize: none; font-family: inherit; }
+        #input:focus { border-color: #1976d2; }
+        #send { padding: 12px 24px; background: #1976d2; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        #send:hover { background: #1565c0; }
+        #send:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <div id="sidebar"></div>
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h1>mt4a</h1>
+            <button id="new-chat-btn">+ 新对话</button>
+        </div>
+        <div id="session-list"></div>
+    </div>
     <div id="main">
-        <div id="chat"></div>
+        <div id="chat">
+            <div id="chat-empty">开始新对话</div>
+        </div>
         <div id="input-container">
-            <input id="input" type="text" placeholder="Type a message..." />
-            <button id="send" onclick="send()">Send</button>
+            <textarea id="input" rows="1" placeholder="输入消息..."></textarea>
+            <button id="send">发送</button>
         </div>
     </div>
     <script src="/static/app.js"></script>

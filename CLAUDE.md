@@ -25,8 +25,14 @@ uv sync
 # Add new dependency (use uv, NOT pip)
 uv add <package>
 
-# Run tests
+# Run all tests
 uv run pytest tests/ -v
+
+# Run a single test file
+uv run pytest tests/agent/test_core.py -v
+
+# Run a specific test
+uv run pytest tests/agent/test_core.py::test_name -v
 ```
 
 ## Architecture
@@ -38,16 +44,18 @@ app/
 ├── api/                  # FastAPI layer
 │   ├── main.py           # FastAPI app entry
 │   ├── routes/
-│   │   └── chat.py      # SSE chat endpoint
-│   └── static/          # Frontend assets
+│   │   ├── chat.py      # SSE chat endpoint (uses SessionManager)
+│   │   └── sessions.py  # Session management endpoints
+│   └── static/          # Frontend assets (stateless UI with sidebar)
 ├── agent/                # Agent core
-│   ├── core.py          # agent_loop, TodoManager, SkillLoader, context compression
-│   └── tools/          # Tool implementations
-│       ├── registry.py # Tool registration system
-│       ├── bash.py     # Shell command tool
-│       ├── file.py     # File operations tool
-│       ├── rag.py      # RAG knowledge search
-│       └── db.py       # Database query tool
+│   ├── core.py          # agent_loop (streaming support), TodoManager, SkillLoader, context compression
+│   ├── session.py       # SessionManager (memory + disk persistence)
+│   └── tools/           # Tool implementations
+│       ├── registry.py  # Tool registration system
+│       ├── bash.py      # Shell command tool
+│       ├── file.py      # File operations tool
+│       ├── rag.py       # RAG knowledge search
+│       └── db.py        # Database query tool
 ├── db/                  # Database layer
 │   ├── models.py        # SQLModel models (Course, Event, Registration)
 │   └── connection.py   # MySQL connection management
@@ -55,6 +63,17 @@ app/
     ├── embedder.py     # DashScope embedding
     └── store.py        # Chroma vector store
 ```
+
+**Session Management**: `SessionManager` in `app/agent/session.py` handles conversation lifecycle. Memory cache for active sessions, auto-persist to `.conversations/{id}.json`. Frontend is stateless — backend maintains all conversation state.
+
+**Streaming**: `agent_loop(messages, stream_callback=...)` supports real-time token streaming via callback. The chat route uses `asyncio.Queue` + background thread to stream LLM output to SSE clients.
+
+**API Endpoints**:
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chat` | POST | Send message, receive SSE stream |
+| `/api/sessions` | GET | List all conversations |
+| `/api/sessions/{id}` | GET | Load conversation history |
 
 **Tool Registry**: Tools are registered via the `ToolRegistry` class and the `@tool` decorator. Available tools: `bash`, `read_file`, `write_file`, `edit_file`, `knowledge_search`, `db_query`, `TodoWrite`, `load_skill`, `compress`.
 
@@ -72,15 +91,6 @@ app/
 | `DATABASE_NAME` | MySQL database name (default: mt4a) |
 | `DASHSCOPE_API_KEY` | API key for DashScope embedding |
 
-## Skills System
+**Frontend**: Static assets served from `app/api/static/` including the web UI at `/`.
 
-Skills are `.md` files in `skills/` directory with YAML frontmatter:
-```markdown
----
-name: skill-name
-description: What this skill does
----
-(skill body content)
-```
-
-Loaded via the `load_skill` tool, with metadata injected into system prompt and body delivered on demand.
+**Skills System**: Skills are loaded dynamically at runtime by the `SkillLoader` class in `app/agent/core.py`. The skills/ directory does not exist on disk — skill content is resolved dynamically when the `load_skill` tool is invoked.

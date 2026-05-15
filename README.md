@@ -4,7 +4,8 @@
 
 ## 功能特性
 
-- **Agent Loop**: 主事件循环，交替执行 LLM 调用和工具执行
+- **Agent Loop**: 主事件循环，支持流式和同步模式，交替执行 LLM 调用和工具执行
+- **Session Manager**: 后端会话管理，内存缓存 + 磁盘持久化，前端无状态
 - **Tool Registry**: 可配置的模块化工具注册系统
 - **Todo Manager**: 内存任务跟踪，3 轮无更新时自动提醒
 - **Context Compression**: 上下文压缩（微压缩 + 自动压缩）
@@ -19,10 +20,12 @@ app/
 ├── api/                  # FastAPI Web 层
 │   ├── main.py           # FastAPI 入口
 │   ├── routes/
-│   │   └── chat.py      # SSE 聊天端点
-│   └── static/          # 前端静态资源
+│   │   ├── chat.py      # SSE 聊天端点（使用 SessionManager）
+│   │   └── sessions.py  # 会话管理端点
+│   └── static/          # 前端静态资源（无状态 UI + 侧边栏）
 ├── agent/                # Agent 核心
-│   ├── core.py          # agent_loop, TodoManager, SkillLoader
+│   ├── core.py          # agent_loop（流式支持）, TodoManager, SkillLoader
+│   ├── session.py       # SessionManager（内存 + 磁盘持久化）
 │   └── tools/           # 工具实现
 │       ├── registry.py  # 工具注册表
 │       ├── bash.py      # Shell 命令工具
@@ -69,6 +72,32 @@ uvicorn app.api.main:app --host 0.0.0.0 --port 8000
 
 访问 http://localhost:8000 查看 Web 界面。
 
+## API 端点
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/chat` | POST | 发送消息，接收 SSE 流 |
+| `/api/sessions` | GET | 列出所有会话 |
+| `/api/sessions/{id}` | GET | 加载指定会话的历史记录 |
+
+### 请求格式
+
+```json
+// POST /api/chat
+{
+  "conversation_id": "可选，不传则创建新会话",
+  "message": "用户消息内容"
+}
+```
+
+### SSE 响应格式
+
+```
+data: {"type": "conversation_id", "conversation_id": "..."}
+data: {"type": "content", "content": "流式文本片段"}
+data: {"type": "done"}
+```
+
 ## 可用工具
 
 | 工具 | 描述 |
@@ -94,6 +123,22 @@ uv add <package>
 ```
 
 ## 架构说明
+
+### Session Manager
+
+会话状态完全由后端管理：
+- `SessionManager` 在内存中维护活跃会话 `{conversation_id: messages}`
+- 每次交互后自动持久化到 `.conversations/{id}.json`
+- 收到 `conversation_id` 时从磁盘恢复历史
+- 前端无状态，只需发送 `{conversation_id?, message}`
+
+### Streaming Agent Loop
+
+`agent_loop(messages, stream_callback=...)` 支持两种模式：
+- **流式模式**：提供 `stream_callback` 时，每次 LLM 输出 token 时调用回调
+- **同步模式**：不提供回调时，保持原有阻塞行为（用于 CLI/调试）
+
+Chat 路由使用 `asyncio.Queue` + 后台线程实现真正的实时流式传输。
 
 ### Tool Registry
 

@@ -214,22 +214,24 @@ def agent_loop(messages: list, stream_callback=None):
             # 构建完整的 content blocks
             content_blocks = []
             current_block = None
-            current_block_index = -1
             stop_reason = None
             
             for event in response_stream:
                 if event.type == "content_block_start":
-                    current_block_index = event.index
-                    if event.content_block.type == "text":
+                    block_type = getattr(event.content_block, 'type', None) if event.content_block else None
+                    if block_type == "text":
                         current_block = {"type": "text", "text": ""}
-                    elif event.content_block.type == "tool_use":
+                    elif block_type == "tool_use":
                         current_block = {
                             "type": "tool_use",
-                            "id": event.content_block.id,
-                            "name": event.content_block.name,
+                            "id": getattr(event.content_block, 'id', ''),
+                            "name": getattr(event.content_block, 'name', ''),
                             "input": "",
                         }
-                    content_blocks.append(current_block)
+                    else:
+                        current_block = None
+                    if current_block:
+                        content_blocks.append(current_block)
                 
                 elif event.type == "content_block_delta":
                     if current_block and current_block["type"] == "text":
@@ -249,15 +251,24 @@ def agent_loop(messages: list, stream_callback=None):
                     current_block = None
                 
                 elif event.type == "message_delta":
-                    stop_reason = event.delta.stop_reason
+                    if hasattr(event, 'delta') and event.delta:
+                        stop_reason = getattr(event.delta, 'stop_reason', None)
+            
+            # 如果没有收到 stop_reason，默认为 end_turn
+            if stop_reason is None:
+                stop_reason = "end_turn"
             
             # 解析 tool_use 的 input JSON
             for block in content_blocks:
                 if block["type"] == "tool_use":
                     try:
                         block["input"] = json.loads(block["input"]) if block["input"] else {}
-                    except json.JSONDecodeError:
+                    except (json.JSONDecodeError, TypeError):
                         block["input"] = {}
+            
+            # 如果没有 content blocks，添加空文本块
+            if not content_blocks:
+                content_blocks = [{"type": "text", "text": ""}]
             
             # 添加到消息历史
             messages.append({"role": "assistant", "content": content_blocks})

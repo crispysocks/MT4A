@@ -189,7 +189,14 @@ Skills: {SKILLS.descriptions()}"""
 # ---------------------------------------------------------------------------
 # Agent loop
 # ---------------------------------------------------------------------------
-def agent_loop(messages: list):
+def agent_loop(messages: list, stream_callback=None):
+    """
+    Agent 主循环
+    
+    Args:
+        messages: 消息列表（会被原地修改）
+        stream_callback: 可选回调，每次 LLM 输出 token 时调用 callback(text: str)
+    """
     rounds_without_todo = 0
     while True:
         microcompact(messages)
@@ -197,39 +204,64 @@ def agent_loop(messages: list):
             print("[auto-compact triggered]")
             messages[:] = auto_compact(messages)
 
-        response = client.messages.create(
-            model=MODEL, system=SYSTEM, messages=messages,
-            tools=registry.list(), max_tokens=8000,
-        )
-        messages.append({"role": "assistant", "content": response.content})
-        if response.stop_reason != "tool_use":
+        if stream_callback:
+            # 流式模式
+            response_stream = client.messages.create(
+                model=MODEL, system=SYSTEM, messages=messages,
+                tools=registry.list(), max_tokens=8000, stream=True,
+            )
+            
+            collected_text = []
+            for event in response_stream:
+                if event.type == "content_block_delta":
+                    try:
+                        text = event.delta.text
+                        collected_text.append(text)
+                        stream_callback(text)
+                    except AttributeError:
+                        pass
+            
+            # 构建完整响应对象
+            full_text = "".join(collected_text)
+            messages.append({"role": "assistant", "content": full_text})
+            
+            # 流式模式下不处理工具调用（简化版）
             return
+        else:
+            # 同步模式（原有逻辑）
+            response = client.messages.create(
+                model=MODEL, system=SYSTEM, messages=messages,
+                tools=registry.list(), max_tokens=8000,
+            )
+            messages.append({"role": "assistant", "content": response.content})
+            if response.stop_reason != "tool_use":
+                return
 
-        results = []
-        used_todo = False
-        manual_compress = False
-        for block in response.content:
-            if block.type == "tool_use":
-                if block.name == "compress":
-                    manual_compress = True
-                try:
-                    handler = registry.get_handler(block.name)
-                    output = handler(**block.input)
-                except Exception as e:
-                    output = f"Error: {e}"
-                print(f"> {block.name}:")
-                print(str(output)[:200])
-                results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)})
-                if block.name == "TodoWrite":
-                    used_todo = True
+            results = []
+            used_todo = False
+            manual_compress = False
+            for block in response.content:
+                if block.type == "tool_use":
+                    if block.name == "compress":
+                        manual_compress = True
+                    try:
+                        handler = registry.get_handler(block.name)
+                        output = handler(**block.input)
+                    except Exception as e:
+                        output = f"Error: {e}"
+                    print(f"> {block.name}:")
+                    print(str(output)[:200])
+                    results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)})
+                    if block.name == "TodoWrite":
+                        used_todo = True
 
-        rounds_without_todo = 0 if used_todo else rounds_without_todo + 1
-        if TODO.has_open_items() and rounds_without_todo >= 3:
-            results.append({"type": "text", "text": "<reminder>Update your todos.</reminder>"})
+            rounds_without_todo = 0 if used_todo else rounds_without_todo + 1
+            if TODO.has_open_items() and rounds_without_todo >= 3:
+                results.append({"type": "text", "text": "<reminder>Update your todos.</reminder>"})
 
-        messages.append({"role": "user", "content": results})
+            messages.append({"role": "user", "content": results})
 
-        if manual_compress:
-            print("[manual compact]")
-            messages[:] = auto_compact(messages)
-            return
+            if manual_compress:
+                print("[manual compact]")
+                messages[:] = auto_compact(messages)
+                return

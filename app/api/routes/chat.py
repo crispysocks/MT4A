@@ -40,9 +40,10 @@ async def chat(request: Request):
     
     # 使用 asyncio.Queue 实现真正的流式传输
     queue = asyncio.Queue()
+    loop = asyncio.get_running_loop()
     
     def stream_callback(text: str):
-        asyncio.get_event_loop().call_soon_threadsafe(
+        loop.call_soon_threadsafe(
             queue.put_nowait, {"type": "content", "content": text}
         )
     

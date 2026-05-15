@@ -37,8 +37,31 @@ registry.register(
 registry.register(
     "db_query",
     db_query,
-    {"type": "object", "properties": {"operation": {"type": "string"}, "table": {"type": "string"}, "conditions": {"type": "string"}, "data": {"type": "object"}}, "required": ["operation", "table"]},
-    "Query or modify database (courses, events, registrations)."
+    {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "enum": ["select", "insert", "update", "delete"],
+                "description": "Database operation to perform"
+            },
+            "table": {
+                "type": "string",
+                "enum": ["courses", "events", "registrations"],
+                "description": "Table to query or modify"
+            },
+            "conditions": {
+                "type": "string",
+                "description": "JSON string of field=value filters, e.g. '{\"status\": \"active\"}'"
+            },
+            "data": {
+                "type": "object",
+                "description": "Field values for insert/update operations"
+            }
+        },
+        "required": ["operation", "table"]
+    },
+    "Query or modify database. Use operation='select' with optional conditions (JSON string) to filter results. Use operation='insert' with data dict to add records. Use operation='update' with conditions and data to modify records. Use operation='delete' with conditions to remove records."
 )
 
 __all__ = ["registry", "tool", "ToolRegistry"]

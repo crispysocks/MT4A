@@ -1,5 +1,5 @@
 import os
-from sqlmodel import create_engine, Session
+from sqlmodel import create_engine, Session, SQLModel
 
 DATABASE_URL = (
     f"mysql+mysqlconnector://"

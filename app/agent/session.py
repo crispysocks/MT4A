@@ -72,7 +72,7 @@ class SessionManager:
             }
             for sid, meta in sorted(
                 self._metadata.items(),
-                key=lambda x: x[1].get("updated_at", ""),
+                key=lambda x: x[1].get("updated_at") or "",
                 reverse=True,
             )
         ]

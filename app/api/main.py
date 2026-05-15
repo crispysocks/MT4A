@@ -3,11 +3,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from .routes import chat
+from .routes import chat, sessions
 
 app = FastAPI(title="mt4a Agent API")
 
 app.include_router(chat.router, prefix="/api")
+app.include_router(sessions.router, prefix="/api")
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):

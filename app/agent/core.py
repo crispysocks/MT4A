@@ -205,28 +205,96 @@ def agent_loop(messages: list, stream_callback=None):
             messages[:] = auto_compact(messages)
 
         if stream_callback:
-            # 流式模式
+            # 流式模式（支持工具调用）
             response_stream = client.messages.create(
                 model=MODEL, system=SYSTEM, messages=messages,
                 tools=registry.list(), max_tokens=8000, stream=True,
             )
             
-            collected_text = []
+            # 构建完整的 content blocks
+            content_blocks = []
+            current_block = None
+            current_block_index = -1
+            stop_reason = None
+            
             for event in response_stream:
-                if event.type == "content_block_delta":
+                if event.type == "content_block_start":
+                    current_block_index = event.index
+                    if event.content_block.type == "text":
+                        current_block = {"type": "text", "text": ""}
+                    elif event.content_block.type == "tool_use":
+                        current_block = {
+                            "type": "tool_use",
+                            "id": event.content_block.id,
+                            "name": event.content_block.name,
+                            "input": "",
+                        }
+                    content_blocks.append(current_block)
+                
+                elif event.type == "content_block_delta":
+                    if current_block and current_block["type"] == "text":
+                        try:
+                            text = event.delta.text
+                            current_block["text"] += text
+                            stream_callback(text)
+                        except AttributeError:
+                            pass
+                    elif current_block and current_block["type"] == "tool_use":
+                        try:
+                            current_block["input"] += event.delta.partial_json
+                        except AttributeError:
+                            pass
+                
+                elif event.type == "content_block_stop":
+                    current_block = None
+                
+                elif event.type == "message_delta":
+                    stop_reason = event.delta.stop_reason
+            
+            # 解析 tool_use 的 input JSON
+            for block in content_blocks:
+                if block["type"] == "tool_use":
                     try:
-                        text = event.delta.text
-                        collected_text.append(text)
-                        stream_callback(text)
-                    except AttributeError:
-                        pass
+                        block["input"] = json.loads(block["input"]) if block["input"] else {}
+                    except json.JSONDecodeError:
+                        block["input"] = {}
             
-            # 构建完整响应对象
-            full_text = "".join(collected_text)
-            messages.append({"role": "assistant", "content": full_text})
+            # 添加到消息历史
+            messages.append({"role": "assistant", "content": content_blocks})
             
-            # 流式模式下不处理工具调用（简化版）
-            return
+            # 如果没有工具调用，直接返回
+            if stop_reason != "tool_use":
+                return
+            
+            # 处理工具调用
+            results = []
+            used_todo = False
+            manual_compress = False
+            for block in content_blocks:
+                if block["type"] == "tool_use":
+                    if block["name"] == "compress":
+                        manual_compress = True
+                    try:
+                        handler = registry.get_handler(block["name"])
+                        output = handler(**block["input"])
+                    except Exception as e:
+                        output = f"Error: {e}"
+                    print(f"> {block['name']}:")
+                    print(str(output)[:200])
+                    results.append({"type": "tool_result", "tool_use_id": block["id"], "content": str(output)})
+                    if block["name"] == "TodoWrite":
+                        used_todo = True
+            
+            rounds_without_todo = 0 if used_todo else rounds_without_todo + 1
+            if TODO.has_open_items() and rounds_without_todo >= 3:
+                results.append({"type": "text", "text": "<reminder>Update your todos.</reminder>"})
+            
+            messages.append({"role": "user", "content": results})
+            
+            if manual_compress:
+                print("[manual compact]")
+                messages[:] = auto_compact(messages)
+                return
         else:
             # 同步模式（原有逻辑）
             response = client.messages.create(

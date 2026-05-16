@@ -21,3 +21,11 @@ def init_db():
         StudentGrade, LeaveRequest, ExamSchedule, PsychologyProfile, PsychologyWarning,
     )
     SQLModel.metadata.create_all(engine)
+
+
+def init_db_on_startup():
+    """Startup-time DB init with error handling"""
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[WARN] Database init skipped: {e}")

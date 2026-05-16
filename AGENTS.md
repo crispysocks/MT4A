@@ -58,6 +58,17 @@ uv run python -c "from app.db.connection import init_db; init_db()"
 - 前端**无状态**，会话由后端 `SessionManager` 管理
 - 会话文件存储在 `.conversations/`（运行时创建），格式为 `{id}.json`
 
+## 工具配置
+
+- `souls/tool_config.yaml` 控制每个角色可用的工具（编辑后下次请求自动生效）
+- `souls/{role}/SOUL.md` 定义角色系统提示词（支持 YAML frontmatter）
+- 工具通过 `@tool` 装饰器或 `registry.register()` 注册在 `app/agent/tools/__init__.py`
+
+## Skills 动态加载
+
+- `skills/` 目录由 `SkillLoader` 在运行时动态扫描 `SKILL.md` 文件（当前目录不存在，Agent 调用 `load_skill` 返回 `(no skills)`，不影响其他功能）
+- 后续计划添加项目级 SKILL.md 文件
+
 ## 测试
 
 - 测试文件在 `tests/`（被 .gitignore 忽略）

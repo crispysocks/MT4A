@@ -71,7 +71,7 @@ _TOOL_DEFS: dict = {
             "type": "object",
             "properties": {
                 "operation": {"type": "string", "enum": ["select", "insert", "update", "delete"], "description": "Database operation to perform"},
-                "table": {"type": "string", "enum": ["courses", "events", "registrations"], "description": "Table to query or modify"},
+                "table": {"type": "string", "enum": ["courses", "events", "registrations", "users", "leads", "lead_follow_ups", "daily_reports", "complaints", "organization", "student_grades", "leave_requests", "exam_schedule", "psychology_profiles", "psychology_warnings"], "description": "Table to query or modify"},
                 "conditions": {"type": "string", "description": "JSON string of field=value filters, e.g. '{\"status\": \"active\"}'"},
                 "data": {"type": "object", "description": "Field values for insert/update operations"},
             },

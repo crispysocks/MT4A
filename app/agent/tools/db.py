@@ -1,6 +1,10 @@
 from app.db.connection import engine
 from sqlmodel import Session, select
-from app.db.models import Course, Event, Registration
+from app.db.models import (
+    Course, Event, Registration,
+    User, Lead, LeadFollowUp, DailyReport, Complaint, Organization,
+    StudentGrade, LeaveRequest, ExamSchedule, PsychologyProfile, PsychologyWarning,
+)
 import json
 from typing import Optional, Dict, Any
 
@@ -38,6 +42,17 @@ def db_query(operation: str, table: str, conditions: str = None, data: dict = No
                 "courses": Course,
                 "events": Event,
                 "registrations": Registration,
+                "users": User,
+                "leads": Lead,
+                "lead_follow_ups": LeadFollowUp,
+                "daily_reports": DailyReport,
+                "complaints": Complaint,
+                "organization": Organization,
+                "student_grades": StudentGrade,
+                "leave_requests": LeaveRequest,
+                "exam_schedule": ExamSchedule,
+                "psychology_profiles": PsychologyProfile,
+                "psychology_warnings": PsychologyWarning,
             }
             model = model_map.get(table)
             if not model:

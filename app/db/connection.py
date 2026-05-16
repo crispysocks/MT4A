@@ -15,5 +15,9 @@ def get_session():
         yield session
 
 def init_db():
-    from app.db.models import Course, Event, Registration
+    from app.db.models import (
+        Course, Event, Registration,
+        User, Lead, LeadFollowUp, DailyReport, Complaint, Organization,
+        StudentGrade, LeaveRequest, ExamSchedule, PsychologyProfile, PsychologyWarning,
+    )
     SQLModel.metadata.create_all(engine)

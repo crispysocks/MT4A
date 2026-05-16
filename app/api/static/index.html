@@ -47,9 +47,20 @@
         #send { padding: 12px 24px; background: #1976d2; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
         #send:hover { background: #1565c0; }
         #send:disabled { background: #ccc; cursor: not-allowed; }
+#topbar { height: 48px; background: #2563eb; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; color: #fff; font-size: 14px; }
+#topbar .role-label { font-weight: 600; }
+#logout-btn { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+#logout-btn:hover { background: rgba(255,255,255,0.3); }
+#guest-banner { background: #fef3c7; color: #92400e; padding: 6px 16px; text-align: center; font-size: 13px; }
+#guest-banner a { color: #2563eb; }
     </style>
 </head>
 <body>
+<div id="topbar">
+    <span class="role-label" id="role-label">加载中...</span>
+    <button id="logout-btn" onclick="logout()">登出</button>
+</div>
+<div id="guest-banner" style="display:none">游客模式 · <a href="/login">登录享受更多功能</a></div>
     <div id="sidebar">
         <div id="sidebar-header">
             <h1>mt4a</h1>

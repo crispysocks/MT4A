@@ -76,6 +76,7 @@ def test_load_nonexistent_soul(tmp_path):
     mgr.load("nonexistent")
 
     assert mgr.is_active() is False
+    assert mgr.current_role is None
 
 
 def test_singleton_reset(tmp_path):

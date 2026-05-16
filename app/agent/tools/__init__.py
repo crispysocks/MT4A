@@ -9,10 +9,10 @@ from .db import db_query
 # Remove a name to disable, add a name (plus its definition below) to enable.
 # ---------------------------------------------------------------------------
 ENABLED_TOOLS = [
-    "bash",
+    # "bash",
     "read_file",
-    "write_file",
-    "edit_file",
+    # "write_file",
+    # "edit_file",
     "knowledge_search",
     "db_query",
     "TodoWrite",

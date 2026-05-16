@@ -11,7 +11,7 @@ class SoulManager:
         self._base_dir = Path(souls_dir)
         self._active_soul: dict | None = None
         self.current_role = None
-        self._tool_config = self._load_tool_config()
+        self._tool_config: dict = {}
 
     # ------------------------------------------------------------------
     # Tool config
@@ -22,12 +22,18 @@ class SoulManager:
             print(f"[WARN] Tool config not found: {config_path}")
             return {}
         with open(config_path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
+            try:
+                data = yaml.safe_load(f)
+                return data if isinstance(data, dict) else {}
+            except yaml.YAMLError as e:
+                print(f"[WARN] Failed to parse tool config: {e}")
+                return {}
 
     # ------------------------------------------------------------------
     # Load / unload
     # ------------------------------------------------------------------
     def load(self, role: str) -> None:
+        self._tool_config = self._load_tool_config()
         soul_path = self._base_dir / role / "SOUL.md"
         if not soul_path.exists():
             print(f"[WARN] SOUL.md not found for role '{role}': {soul_path}")

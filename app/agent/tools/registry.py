@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable, Any
 
 class ToolDef:
@@ -16,11 +17,26 @@ class ToolRegistry:
             raise ValueError(f"Tool '{name}' already registered")
         self._tools[name] = ToolDef(name, handler, schema, description)
 
-    def list(self) -> list[dict]:
+    def list(self, allowed_tools: list[str] = None) -> list[dict]:
+        tools = self._tools.values()
+        if allowed_tools is not None:
+            tools = [t for t in tools if t.name in allowed_tools]
         return [
             {"name": t.name, "description": t.description, "input_schema": t.schema}
-            for t in self._tools.values()
+            for t in tools
         ]
+
+    def clear(self):
+        """Clear all registered tools for role switching"""
+        self._tools.clear()
+
+    def register_all(self, tool_defs: dict, enabled: list[str]):
+        """Batch register tools after clearing existing ones"""
+        self.clear()
+        for name in enabled:
+            if name in tool_defs:
+                handler, schema, desc = tool_defs[name]
+                self.register(name, handler, schema, desc)
 
     def get_handler(self, name: str) -> Callable:
         if name not in self._tools:

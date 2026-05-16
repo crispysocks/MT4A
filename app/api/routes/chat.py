@@ -1,11 +1,14 @@
 import json
 import asyncio
 from pathlib import Path
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
+import jwt
+import os
 
 from app.agent.session import SessionManager
-from app.agent.core import agent_loop
+from app.agent.core import agent_loop, soul_manager
+from app.agent.auth import SECRET_KEY
 
 router = APIRouter()
 
@@ -21,11 +24,30 @@ async def chat(request: Request):
         body = await request.json()
     except Exception:
         body = {}
-    
+
     message = body.get("message", "")
     conversation_id = body.get("conversation_id")
-    
-    # 加载或创建会话
+
+    # Parse JWT token from Authorization header
+    token = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+
+    # Load appropriate SOUL based on token
+    if token:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            role = payload.get("role", "guest")
+            if not soul_manager.is_active() or soul_manager.current_role != role:
+                soul_manager.load(role)
+        except jwt.PyJWTError:
+            raise HTTPException(401, "Invalid token")
+    else:
+        if not soul_manager.is_active():
+            soul_manager.load("guest")
+
+    # Load or create session
     if conversation_id:
         messages = session_manager.get_session(conversation_id)
         if messages is None:
@@ -34,23 +56,20 @@ async def chat(request: Request):
     else:
         conversation_id = session_manager.create_session()
         messages = session_manager.get_session(conversation_id)
-    
-    # 追加用户消息
+
     messages.append({"role": "user", "content": message})
-    
-    # 使用 asyncio.Queue 实现真正的流式传输
+
     queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
-    
+
     def stream_callback(text: str):
         loop.call_soon_threadsafe(
             queue.put_nowait, {"type": "content", "content": text}
         )
-    
+
     async def event_stream():
         import threading
-        
-        # 在后台线程运行 agent_loop
+
         def run_agent():
             try:
                 agent_loop(messages, stream_callback=stream_callback)
@@ -58,18 +77,17 @@ async def chat(request: Request):
                 queue.put_nowait({"type": "error", "content": str(e)})
             finally:
                 queue.put_nowait({"type": "done"})
-        
+
         thread = threading.Thread(target=run_agent, daemon=True)
         thread.start()
-        
-        # 发送 conversation_id
+
+        # Send role info first, then conversation_id
+        yield f"data: {json.dumps({'type': 'role', 'role': soul_manager.current_role or 'guest'})}\n\n"
         yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
-        
-        # 从队列读取并发送
+
         while True:
             item = await queue.get()
             if item["type"] == "done":
-                # 保存会话
                 session_manager.save_session(conversation_id)
                 yield f"data: {json.dumps({'type': 'done'})}\n\n"
                 break

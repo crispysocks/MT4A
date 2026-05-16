@@ -48,3 +48,6 @@ guest:
   - knowledge_search  # 搜索知识库（品牌介绍、FAQ）
   # - TodoWrite         # 任务列表管理
   # - compress          # 上下文压缩
+
+faq_roles:
+  - guest

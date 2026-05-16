@@ -13,6 +13,7 @@ from app.rag.router import KnowledgeRouter
 import app.rag.router as rag_router
 
 rag_router.knowledge_router = KnowledgeRouter(soul_manager)
+rag_router.knowledge_router.faq_roles = soul_manager._tool_config.get("faq_roles", [])
 
 router = APIRouter()
 

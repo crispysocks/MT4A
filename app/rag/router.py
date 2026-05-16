@@ -11,6 +11,7 @@ class KnowledgeRouter:
     def __init__(self, soul_manager, role_bases: dict = None):
         self.soul_manager = soul_manager
         self.role_bases = role_bases or ROLE_KNOWLEDGE_BASES
+        self.faq_roles: list[str] = []
 
     def get_allowed_bases(self) -> List[str]:
         if self.soul_manager.is_active():

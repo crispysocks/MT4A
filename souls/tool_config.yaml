@@ -1,19 +1,50 @@
-# Agent工具配置: 角色 → 可用工具列表
-# 测试阶段只需编辑此文件，下次请求加载SOUL时立即生效
+# =============================================================================
+# Agent 工具配置
+# =============================================================================
+# 角色 → 可用工具列表。测试阶段只需编辑此文件，下次请求时自动生效。
+#
+# 可用工具清单（含注释说明）：
+#
+#   knowledge_search  — 搜索知识库（按角色过滤RAG结果）
+#   db_query          — 对14张业务表进行CRUD操作（courses/events/registrations等）
+#   TodoWrite         — 管理任务列表（增/改/完成）
+#   compress          — 手动压缩对话上下文，释放token
+#   load_skill        — 加载SKILL.md中的专业知识
+#   read_file         — 读取文件内容（指定行数上限）
+#   write_file        — 写入文件内容
+#   edit_file         — 替换文件中的指定文本
+#   bash              — 执行Shell命令（谨慎使用）
+#
+# 工具说明：
+#   - knowledge_search: 支持按角色过滤知识库内容（company/public/business/policy）
+#   - db_query: 支持 select/insert/update/delete 操作，14张表见 app/agent/tools/__init__.py
+#   - TodoWrite: items数组，每项包含 content/status/activeForm
+#   - compress: 手动触发微压缩+自动压缩，token超过阈值时自动生效
+#   - load_skill: 根据name加载 skills/ 目录下的 SKILL.md 文件
+#   - read_file: path参数，必填；limit参数可选
+#   - write_file: path + content 参数
+#   - edit_file: path + old_text + new_text 参数（精确替换）
+#   - bash: command参数，建议仅内部/调试用
+#
+# 默认角色配置（测试阶段）：
+#   student  — 留学生助手
+#   employee — 企业内部助手
+#   guest    — 外部客服（无db_query权限）
+# =============================================================================
 
 student:
-  - knowledge_search
-  - db_query
-  - TodoWrite
-  - compress
+  - knowledge_search  # 搜索知识库（留学政策、院校信息）
+  - db_query          # 业务表CRUD（成绩/请假/投诉等）
+  - TodoWrite         # 任务列表管理
+  - compress          # 上下文压缩
 
 employee:
-  - knowledge_search
-  - db_query
-  - TodoWrite
-  - compress
+  - knowledge_search  # 搜索知识库（内部制度、新人指南）
+  - db_query          # 业务表CRUD（客户跟进、日报、组织架构）
+  - TodoWrite         # 任务列表管理
+  - compress          # 上下文压缩
 
 guest:
-  - knowledge_search
-  - TodoWrite
-  - compress
+  - knowledge_search  # 搜索知识库（品牌介绍、FAQ）
+  - TodoWrite         # 任务列表管理
+  - compress          # 上下文压缩

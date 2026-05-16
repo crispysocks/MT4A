@@ -1,6 +1,9 @@
 import os
 from typing import List
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 class Embedder:
     def __init__(self, api_key: str = None, model: str = "text-embedding-v3"):
         self.api_key = api_key or os.getenv("EMBEDDINGS_API_KEY")
@@ -15,7 +18,7 @@ class Embedder:
         }
         payload = {
             "model": self.model,
-            "input": {"texts": texts}
+            "input": texts[0] if len(texts) == 1 else texts
         }
         resp = httpx.post(
             f"{self.base_url}/embeddings",

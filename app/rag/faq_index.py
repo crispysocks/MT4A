@@ -18,14 +18,14 @@ def parse_faq(md_path: Path) -> list[dict]:
     Returns list of {"question": str, "answer": str}.
     """
     content = md_path.read_text(encoding="utf-8")
-    sections = re.split(r"\n(?=## )", content)
+    sections = re.split(r"\n(?=#{2,3} )", content)
 
     faqs = []
     for section in sections:
         section = section.strip()
         if not section:
             continue
-        heading_match = re.match(r"## (.+)", section)
+        heading_match = re.match(r"#{2,3} (.+)", section)
         if not heading_match:
             continue
         question = heading_match.group(1).strip()

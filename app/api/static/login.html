@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - 留学机构智能助手</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f4f8; }
+.container { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); width: 380px; }
+h1 { text-align: center; margin-bottom: 32px; color: #1e293b; font-size: 24px; }
+.form-group { margin-bottom: 16px; }
+label { display: block; margin-bottom: 6px; font-size: 14px; color: #475569; font-weight: 500; }
+input, select { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+input:focus, select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.error { color: #dc2626; font-size: 13px; margin-bottom: 12px; text-align: center; }
+.success { color: #16a34a; font-size: 13px; margin-bottom: 12px; text-align: center; }
+.tabs { display: flex; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
+.tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #64748b; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+.hidden { display: none; }
+.guest-link { text-align: center; margin-top: 20px; }
+.guest-link a { color: #2563eb; text-decoration: none; font-size: 14px; }
+.guest-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>留学机构智能助手</h1>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('login')">登录</div>
+        <div class="tab" onclick="switchTab('register')">注册</div>
+    </div>
+    <div id="error" class="error hidden"></div>
+    <div id="success" class="success hidden"></div>
+    <form id="loginForm">
+        <div class="form-group"><label>用户名</label><input type="text" id="loginUser" required></div>
+        <div class="form-group"><label>密码</label><input type="password" id="loginPass" required></div>
+        <button type="submit" class="btn btn-primary">登录</button>
+    </form>
+    <form id="registerForm" class="hidden">
+        <div class="form-group"><label>用户名</label><input type="text" id="regUser" required minlength="2"></div>
+        <div class="form-group"><label>密码</label><input type="password" id="regPass" required minlength="4"></div>
+        <div class="form-group">
+            <label>角色</label>
+            <select id="regRole"><option value="student">学生</option><option value="employee">员工</option></select>
+        </div>
+        <button type="submit" class="btn btn-primary">注册</button>
+    </form>
+    <div class="guest-link"><a href="/">免登录直接咨询（客服模式）</a></div>
+</div>
+
+<script>
+let currentTab = 'login';
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0)===(tab==='login')));
+    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+    hideMessages();
+}
+function showError(msg) { const e=document.getElementById('error'); e.textContent=msg; e.classList.remove('hidden'); document.getElementById('success').classList.add('hidden'); }
+function showSuccess(msg) { const s=document.getElementById('success'); s.textContent=msg; s.classList.remove('hidden'); document.getElementById('error').classList.add('hidden'); }
+function hideMessages() { document.getElementById('error').classList.add('hidden'); document.getElementById('success').classList.add('hidden'); }
+
+document.getElementById('loginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    hideMessages();
+    const username = document.getElementById('loginUser').value;
+    const password = document.getElementById('loginPass').value;
+    try {
+        const resp = await fetch('/api/auth/login', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+        const data = await resp.json();
+        if (!resp.ok) { showError(data.detail || '登录失败'); return; }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        window.location.href = '/';
+    } catch (err) { showError('网络错误，请重试'); }
+};
+
+document.getElementById('registerForm').onsubmit = async (e) => {
+    e.preventDefault();
+    hideMessages();
+    const username = document.getElementById('regUser').value;
+    const password = document.getElementById('regPass').value;
+    const role = document.getElementById('regRole').value;
+    try {
+        const resp = await fetch('/api/auth/register', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password, role})
+        });
+        const data = await resp.json();
+        if (!resp.ok) { showError(data.detail || '注册失败'); return; }
+        showSuccess('注册成功！请切换到登录页面登录');
+        document.getElementById('regUser').value = '';
+        document.getElementById('regPass').value = '';
+    } catch (err) { showError('网络错误，请重试'); }
+};
+</script>
+</body>
+</html>

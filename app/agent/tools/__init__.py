@@ -5,22 +5,6 @@ from .rag import knowledge_search
 from .db import db_query
 
 # ---------------------------------------------------------------------------
-# Edit this list to control which tools are available to the LLM.
-# Remove a name to disable, add a name (plus its definition below) to enable.
-# ---------------------------------------------------------------------------
-ENABLED_TOOLS = [
-    # "bash",
-    "read_file",
-    # "write_file",
-    # "edit_file",
-    "knowledge_search",
-    "db_query",
-    "TodoWrite",
-    "load_skill",
-    "compress",
-]
-
-# ---------------------------------------------------------------------------
 # Core tool handlers (depend on core.py objects, imported lazily)
 # ---------------------------------------------------------------------------
 def _todo_write_handler(items: list) -> str:
@@ -114,11 +98,9 @@ _TOOL_DEFS: dict = {
 }
 
 # ---------------------------------------------------------------------------
-# Register only enabled tools
+# Register all defined tools (role filtering done via tool_config.yaml)
 # ---------------------------------------------------------------------------
-for _name in ENABLED_TOOLS:
-    if _name in _TOOL_DEFS:
-        _handler, _schema, _desc = _TOOL_DEFS[_name]
-        registry.register(_name, _handler, _schema, _desc)
+for _name, (_handler, _schema, _desc) in _TOOL_DEFS.items():
+    registry.register(_name, _handler, _schema, _desc)
 
-__all__ = ["registry", "tool", "ToolRegistry", "ENABLED_TOOLS"]
+__all__ = ["registry", "tool", "ToolRegistry"]

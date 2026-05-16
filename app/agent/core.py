@@ -147,7 +147,7 @@ def auto_compact(messages: list) -> list:
 
 
 # Tool registration is centralized in app/agent/tools/__init__.py
-# Edit ENABLED_TOOLS there to control which tools the LLM can use.
+# Edit souls/tool_config.yaml to control which tools each agent role can use.
 from app.agent.tools import registry
 
 soul_manager = SoulManager()

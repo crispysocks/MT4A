@@ -47,19 +47,13 @@
 **Files:**
 - Modify: `pyproject.toml`
 
-- [ ] **Step 1: 添加PyJWT和bcrypt依赖**
-
-```toml
-# pyproject.toml dependencies列表追加
-"pyjwt>=2.10.0",
-"bcrypt>=5.0.0",
-```
-
-- [ ] **Step 2: 安装依赖**
+- [ ] **Step 1: 安装依赖**
 
 ```bash
-uv sync
+uv add pyjwt bcrypt
 ```
+
+- [ ] **Step 2: 检查pyproject.toml**
 
 Expected: 无错误, pyjwt和bcrypt包安装成功
 

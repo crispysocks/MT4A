@@ -3,7 +3,7 @@ from typing import List
 
 class Embedder:
     def __init__(self, api_key: str = None, model: str = "text-embedding-v3"):
-        self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
+        self.api_key = api_key or os.getenv("EMBEDDINGS_API_KEY")
         self.model = model
         self.base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 

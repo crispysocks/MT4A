@@ -57,7 +57,7 @@ cp .env.example .env
 
 可选：
 - `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`
-- `DASHSCOPE_API_KEY`
+- `EMBEDDINGS_API_KEY`
 
 ### 2. 安装依赖
 
@@ -175,7 +175,7 @@ source app/db/init_db.sql;
 
 ### RAG 知识库
 
-知识搜索使用 Chroma 向量数据库和 DashScope Embedding。文档被嵌入存储，需要配置 `DASHSCOPE_API_KEY`。
+知识搜索使用 Chroma 向量数据库和 Embedding 服务。文档被嵌入存储，需要配置 `EMBEDDINGS_API_KEY`。
 
 ## License
 

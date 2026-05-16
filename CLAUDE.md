@@ -89,7 +89,7 @@ app/
 | `DATABASE_USER` | MySQL user (default: root) |
 | `DATABASE_PASSWORD` | MySQL password |
 | `DATABASE_NAME` | MySQL database name (default: mt4a) |
-| `DASHSCOPE_API_KEY` | API key for DashScope embedding |
+| `EMBEDDINGS_API_KEY` | API key for embeddings service |
 
 **Frontend**: Static assets served from `app/api/static/` including the web UI at `/`.
 

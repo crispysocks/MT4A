@@ -50,5 +50,7 @@ async def health():
 @app.on_event("startup")
 async def startup_event():
     from app.db.connection import init_db_on_startup
+    from app.rag.faq_index import build as build_faq_index
     init_db_on_startup()
+    build_faq_index()
     print("[INFO] mt4a Agent API started")

@@ -34,14 +34,16 @@ class ChromaStore:
             metadatas=metadatas or [{}] * len(texts)
         )
 
-    def query(self, query_text: str, top_k: int = 5) -> List[dict]:
+    def query(self, query_text: str, top_k: int = 5, where: dict = None) -> List[dict]:
         from app.rag.embedder import Embedder
         embedder = Embedder()
         query_embedding = embedder.embed([query_text])[0]
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
-        )
+        kwargs = dict(query_embeddings=[query_embedding], n_results=top_k)
+        if where:
+            kwargs["where"] = where
+        results = self.collection.query(**kwargs)
+        if not results["documents"][0]:
+            return []
         return [
             {"content": doc, "distance": dist, "metadata": meta}
             for doc, dist, meta in zip(

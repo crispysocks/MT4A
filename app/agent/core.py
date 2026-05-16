@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
+from app.agent.soul import SoulManager
+
 WORKDIR = Path.cwd()
 MODEL = os.environ.get("MODEL_ID", "qwen3.6-plus")
 
@@ -148,6 +150,8 @@ def auto_compact(messages: list) -> list:
 # Edit ENABLED_TOOLS there to control which tools the LLM can use.
 from app.agent.tools import registry
 
+soul_manager = SoulManager()
+
 SYSTEM = f"""You are a coding agent at {WORKDIR}. Use tools to solve tasks.
 Use TodoWrite for short checklists. Use load_skill for specialized knowledge.
 Skills: {SKILLS.descriptions()}"""
@@ -174,8 +178,9 @@ def agent_loop(messages: list, stream_callback=None):
         if stream_callback:
             # 流式模式（支持工具调用）
             response_stream = client.messages.create(
-                model=MODEL, system=SYSTEM, messages=messages,
-                tools=registry.list(), max_tokens=8000, stream=True,
+                model=MODEL, system=soul_manager.get_system_prompt(), messages=messages,
+                tools=registry.list(allowed_tools=soul_manager.get_tools() or None),
+                max_tokens=8000, stream=True,
             )
             
             # 构建完整的 content blocks
@@ -276,8 +281,9 @@ def agent_loop(messages: list, stream_callback=None):
         else:
             # 同步模式（原有逻辑）
             response = client.messages.create(
-                model=MODEL, system=SYSTEM, messages=messages,
-                tools=registry.list(), max_tokens=8000,
+                model=MODEL, system=soul_manager.get_system_prompt(), messages=messages,
+                tools=registry.list(allowed_tools=soul_manager.get_tools() or None),
+                max_tokens=8000,
             )
             messages.append({"role": "assistant", "content": response.content})
             if response.stop_reason != "tool_use":

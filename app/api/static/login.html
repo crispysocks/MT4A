@@ -3,104 +3,370 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>登录 - 留学机构智能助手</title>
+<title>登录 — 留学机构智能助手</title>
 <style>
+:root {
+    --ink: #1a1a2e;
+    --parchment: #f9f6f0;
+    --surface: #ffffff;
+    --accent: #1e3a8a;
+    --accent-soft: #dbeafe;
+    --gold: #b8860b;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --err: #dc2626;
+    --success: #059669;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-display: Georgia, "Times New Roman", "Noto Serif SC", serif;
+    --font-body: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f4f8; }
-.container { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); width: 380px; }
-h1 { text-align: center; margin-bottom: 32px; color: #1e293b; font-size: 24px; }
+
+body {
+    font-family: var(--font-body);
+    background: var(--parchment);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(30,58,138,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(184,134,11,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(5,150,105,0.03) 0%, transparent 50%);
+    position: relative;
+    overflow: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5v50M5 30h50' stroke='%23d6d3d1' stroke-width='0.5' opacity='0.3'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    padding: 48px 40px 36px;
+    border-radius: 20px;
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.04),
+        0 4px 16px rgba(0,0,0,0.06),
+        0 16px 48px rgba(0,0,0,0.06);
+    width: 400px;
+    border: 1px solid var(--border);
+    animation: cardIn 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 8px;
+}
+.brand .mark {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), #3b5998);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(30,58,138,0.2);
+    animation: markPulse 3s ease-in-out infinite;
+}
+@keyframes markPulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(30,58,138,0.2); }
+    50% { box-shadow: 0 4px 20px rgba(30,58,138,0.35); }
+}
+.brand .mark svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; }
+
+h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+}
+.subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.tabs {
+    display: flex;
+    margin: 28px 0 24px;
+    border-bottom: 1.5px solid var(--border);
+    gap: 0;
+}
+.tab {
+    flex: 1;
+    padding: 10px 0 12px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.75px;
+    transition: color 0.25s, border-color 0.25s;
+    letter-spacing: 0.3px;
+}
+.tab:hover { color: var(--ink); }
+.tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.message {
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    text-align: center;
+    animation: msgIn 0.3s ease;
+    display: none;
+}
+@keyframes msgIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.message.err { background: #fef2f2; color: var(--err); display: block; }
+.message.success { background: #ecfdf5; color: var(--success); display: block; }
+
 .form-group { margin-bottom: 16px; }
-label { display: block; margin-bottom: 6px; font-size: 14px; color: #475569; font-weight: 500; }
-input, select { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
-input:focus, select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
-.btn-primary { background: #2563eb; color: #fff; }
-.btn-primary:hover { background: #1d4ed8; }
-.error { color: #dc2626; font-size: 13px; margin-bottom: 12px; text-align: center; }
-.success { color: #16a34a; font-size: 13px; margin-bottom: 12px; text-align: center; }
-.tabs { display: flex; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
-.tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #64748b; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-.tab.active { color: #2563eb; border-bottom-color: #2563eb; }
-.hidden { display: none; }
-.guest-link { text-align: center; margin-top: 20px; }
-.guest-link a { color: #2563eb; text-decoration: none; font-size: 14px; }
-.guest-link a:hover { text-decoration: underline; }
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: #fafaf9;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    outline: none;
+}
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(30,58,138,0.08);
+    background: var(--surface);
+}
+
+.form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+    font-family: var(--font-body);
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(30,58,138,0.25);
+    margin-top: 4px;
+}
+.btn-primary:hover {
+    background: #1a336f;
+    box-shadow: 0 4px 16px rgba(30,58,138,0.35);
+}
+
+.guest-section {
+    margin-top: 24px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+.guest-section span {
+    font-size: 12px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+.guest-section a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 6px 16px;
+    border: 1.5px solid var(--accent);
+    border-radius: 20px;
+    display: inline-block;
+}
+.guest-section a:hover {
+    background: var(--accent-soft);
+}
+
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
+
 <div class="container">
-    <h1>留学机构智能助手</h1>
+    <div class="brand">
+        <div class="mark">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/><circle cx="12" cy="12" r="8" opacity="0.3"/></svg>
+        </div>
+        <h1>寰宇留学</h1>
+        <div class="subtitle">Intelligent Assistant</div>
+    </div>
+
     <div class="tabs">
         <div class="tab active" onclick="switchTab('login')">登录</div>
         <div class="tab" onclick="switchTab('register')">注册</div>
     </div>
-    <div id="error" class="error hidden"></div>
-    <div id="success" class="success hidden"></div>
-    <form id="loginForm">
-        <div class="form-group"><label>用户名</label><input type="text" id="loginUser" required></div>
-        <div class="form-group"><label>密码</label><input type="password" id="loginPass" required></div>
-        <button type="submit" class="btn btn-primary">登录</button>
-    </form>
-    <form id="registerForm" class="hidden">
-        <div class="form-group"><label>用户名</label><input type="text" id="regUser" required minlength="2"></div>
-        <div class="form-group"><label>密码</label><input type="password" id="regPass" required minlength="4"></div>
+
+    <div class="message err" id="error"></div>
+    <div class="message success" id="success"></div>
+
+    <form id="loginForm" autocomplete="off">
         <div class="form-group">
-            <label>角色</label>
-            <select id="regRole"><option value="student">学生</option><option value="employee">员工</option></select>
+            <label>用户名</label>
+            <input type="text" id="loginUser" placeholder="输入用户名" required>
         </div>
-        <button type="submit" class="btn btn-primary">注册</button>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="loginPass" placeholder="输入密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary">登 录</button>
     </form>
-    <div class="guest-link"><a href="/">免登录直接咨询（客服模式）</a></div>
+
+    <form id="registerForm" class="hidden" autocomplete="off">
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="regUser" placeholder="至少2个字符" required minlength="2">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="regPass" placeholder="至少4个字符" required minlength="4">
+        </div>
+        <div class="form-group">
+            <label>身份</label>
+            <select id="regRole">
+                <option value="student">学生</option>
+                <option value="employee">员工 / 老师</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">注 册</button>
+    </form>
+
+    <div class="guest-section">
+        <span>或</span>
+        <a href="/">免登录体验客服模式</a>
+    </div>
 </div>
 
 <script>
 let currentTab = 'login';
 function switchTab(tab) {
     currentTab = tab;
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0)===(tab==='login')));
+    document.querySelectorAll('.tab').forEach((t,i) => {
+        const isActive = (i === 0 && tab === 'login') || (i === 1 && tab === 'register');
+        t.classList.toggle('active', isActive);
+    });
     document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
     document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
     hideMessages();
 }
-function showError(msg) { const e=document.getElementById('error'); e.textContent=msg; e.classList.remove('hidden'); document.getElementById('success').classList.add('hidden'); }
-function showSuccess(msg) { const s=document.getElementById('success'); s.textContent=msg; s.classList.remove('hidden'); document.getElementById('error').classList.add('hidden'); }
-function hideMessages() { document.getElementById('error').classList.add('hidden'); document.getElementById('success').classList.add('hidden'); }
+function showErr(msg) {
+    const e = document.getElementById('error');
+    e.textContent = msg; e.className = 'message err';
+    document.getElementById('success').className = 'message';
+}
+function showOk(msg) {
+    const s = document.getElementById('success');
+    s.textContent = msg; s.className = 'message success';
+    document.getElementById('error').className = 'message';
+}
+function hideMessages() {
+    document.getElementById('error').className = 'message';
+    document.getElementById('success').className = 'message';
+}
 
 document.getElementById('loginForm').onsubmit = async (e) => {
     e.preventDefault();
     hideMessages();
-    const username = document.getElementById('loginUser').value;
-    const password = document.getElementById('loginPass').value;
+    const btn = e.target.querySelector('button');
+    btn.textContent = '登录中...'; btn.disabled = true;
     try {
         const resp = await fetch('/api/auth/login', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password})
+            body: JSON.stringify({
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            })
         });
         const data = await resp.json();
-        if (!resp.ok) { showError(data.detail || '登录失败'); return; }
+        if (!resp.ok) { showErr(data.detail || '登录失败'); btn.textContent = '登录'; btn.disabled = false; return; }
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
         window.location.href = '/';
-    } catch (err) { showError('网络错误，请重试'); }
+    } catch { showErr('网络错误，请重试'); btn.textContent = '登录'; btn.disabled = false; }
 };
 
 document.getElementById('registerForm').onsubmit = async (e) => {
     e.preventDefault();
     hideMessages();
-    const username = document.getElementById('regUser').value;
-    const password = document.getElementById('regPass').value;
-    const role = document.getElementById('regRole').value;
+    const btn = e.target.querySelector('button');
+    btn.textContent = '注册中...'; btn.disabled = true;
     try {
         const resp = await fetch('/api/auth/register', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password, role})
+            body: JSON.stringify({
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                role: document.getElementById('regRole').value
+            })
         });
         const data = await resp.json();
-        if (!resp.ok) { showError(data.detail || '注册失败'); return; }
-        showSuccess('注册成功！请切换到登录页面登录');
+        if (!resp.ok) { showErr(data.detail || '注册失败'); btn.textContent = '注册'; btn.disabled = false; return; }
+        showOk('注册成功！请切换到登录页面');
         document.getElementById('regUser').value = '';
         document.getElementById('regPass').value = '';
-    } catch (err) { showError('网络错误，请重试'); }
+        btn.textContent = '注册'; btn.disabled = false;
+    } catch { showErr('网络错误，请重试'); btn.textContent = '注册'; btn.disabled = false; }
 };
 </script>
 </body>

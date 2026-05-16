@@ -6,7 +6,7 @@ from typing import Tuple
 from sqlmodel import Session, select
 from app.db.models import User
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production-env")
 JWT_EXPIRE_HOURS = 24
 
 

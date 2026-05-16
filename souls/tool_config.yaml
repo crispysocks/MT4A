@@ -1,0 +1,19 @@
+# Agent工具配置: 角色 → 可用工具列表
+# 测试阶段只需编辑此文件，下次请求加载SOUL时立即生效
+
+student:
+  - knowledge_search
+  - db_query
+  - TodoWrite
+  - compress
+
+employee:
+  - knowledge_search
+  - db_query
+  - TodoWrite
+  - compress
+
+guest:
+  - knowledge_search
+  - TodoWrite
+  - compress

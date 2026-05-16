@@ -9,6 +9,10 @@ import os
 from app.agent.session import SessionManager
 from app.agent.core import agent_loop, soul_manager
 from app.agent.auth import SECRET_KEY
+from app.rag.router import KnowledgeRouter
+import app.rag.router as rag_router
+
+rag_router.knowledge_router = KnowledgeRouter(soul_manager)
 
 router = APIRouter()
 

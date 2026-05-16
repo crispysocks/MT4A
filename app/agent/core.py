@@ -144,42 +144,9 @@ def auto_compact(messages: list) -> list:
     ]
 
 
-# ---------------------------------------------------------------------------
-# Tool handlers
-# ---------------------------------------------------------------------------
-def todo_write_handler(items: list) -> str:
-    return TODO.update(items)
-
-
-def load_skill_handler(name: str) -> str:
-    return SKILLS.load(name)
-
-
-def compress_handler() -> str:
-    return "Compressing..."
-
-
-# Import and register additional tools
+# Tool registration is centralized in app/agent/tools/__init__.py
+# Edit ENABLED_TOOLS there to control which tools the LLM can use.
 from app.agent.tools import registry
-
-registry.register(
-    "TodoWrite",
-    todo_write_handler,
-    {"type": "object", "properties": {"items": {"type": "array", "items": {"type": "object", "properties": {"content": {"type": "string"}, "status": {"type": "string", "enum": ["pending", "in_progress", "completed"]}, "activeForm": {"type": "string"}}, "required": ["content", "status", "activeForm"]}}}, "required": ["items"]},
-    "Update task tracking list."
-)
-registry.register(
-    "load_skill",
-    load_skill_handler,
-    {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]},
-    "Load specialized knowledge by name."
-)
-registry.register(
-    "compress",
-    compress_handler,
-    {"type": "object", "properties": {}},
-    "Manually compress conversation context."
-)
 
 SYSTEM = f"""You are a coding agent at {WORKDIR}. Use tools to solve tasks.
 Use TodoWrite for short checklists. Use load_skill for specialized knowledge.

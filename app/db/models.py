@@ -67,7 +67,7 @@ class Lead(SQLModel, table=True):
     assigned_to: Optional[int] = Field(default=None, foreign_key="users.id")
     notes: Optional[str] = Field(default=None)
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())
-    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(), sa_column_kwargs={"onupdate": lambda: datetime.now()})
 
 
 class LeadFollowUp(SQLModel, table=True):
@@ -107,7 +107,7 @@ class Organization(SQLModel, table=True):
     __tablename__ = "organization"
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(max_length=100)
-    type: str = Field(max_length=50)
+    org_type: str = Field(max_length=50)
     parent_id: Optional[int] = Field(default=None, foreign_key="organization.id")
     contact_info: Optional[str] = Field(default=None, max_length=255)
 
@@ -139,7 +139,7 @@ class ExamSchedule(SQLModel, table=True):
     __tablename__ = "exam_schedule"
     id: Optional[int] = Field(default=None, primary_key=True)
     student_id: int = Field(foreign_key="users.id")
-    type: Optional[str] = Field(default=None, max_length=100)
+    exam_type: Optional[str] = Field(default=None, max_length=100)
     subject: Optional[str] = Field(default=None, max_length=100)
     deadline: Optional[datetime] = Field(default=None)
     description: Optional[str] = Field(default=None)

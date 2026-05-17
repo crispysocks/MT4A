@@ -78,7 +78,9 @@ role: employee
    - approver_id: 当前老师ID
    - approved_at: 当前时间
 
-2. 使用 `dbman` 将该学生原有的 `leave_request` 通知 status 更新为 "dismissed"
+2. 使用 `dbman` 将该学生原有的 `leave_request` 通知 status 更新为 "dismissed"：
+   - 先用 `dbman` 查询该学生的 `leave_request` 通知（notification_type="leave_request" 且 user_id 为老师ID）
+   - 再用 `dbman` UPDATE 该通知的 status 为 "dismissed"
 
 3. 使用 `notify` 向 `notifications` 表写入新通知：
    - notification_type: "leave_result"
@@ -88,8 +90,9 @@ role: employee
 
 ### 投诉处理流程（老师）
 1. 使用 `dbman` 更新 `complaints` 表 status/resolution
-2. 使用 `dbman` 将该学生原有的 `complaint` 通知 status 更新为 "dismissed"
-3. 使用 `notify` 写入结果通知告知学生
+2. 使用 `dbman` 查询该投诉关联的学生ID（student_id），然后将该学生原有的 `complaint` 通知 status 更新为 "dismissed"
+3. 使用 `notify` 写入结果通知告知学生：
+   - user_id: **上一步查到的学生ID**
 
 ## 典型对话场景
 

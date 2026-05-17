@@ -1,6 +1,9 @@
 # 角色可访问的数据库表配置
 employee:
-  - users
+  users:
+    fields:
+      class_advisor_id: read, write
+  tables:
   - leads
   - lead_follow_ups
   - daily_reports
@@ -16,7 +19,10 @@ employee:
   - registrations
 
 student:
-  - users
+  users:
+    fields:
+      class_advisor_id: read
+  tables:
   - student_grades
   - leave_requests
   - exam_schedule

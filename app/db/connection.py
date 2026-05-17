@@ -1,5 +1,9 @@
 import os
 import mysql.connector
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 from sqlmodel import create_engine, Session, SQLModel
 
 DATABASE_HOST = os.getenv('DATABASE_HOST', 'localhost')

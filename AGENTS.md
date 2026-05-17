@@ -62,7 +62,10 @@ uv run python -c "from app.db.connection import init_db; init_db()"
 
 - `souls/tool_config.yaml` 控制每个角色可用的工具（编辑后下次请求自动生效）
 - `souls/{role}/SOUL.md` 定义角色系统提示词（支持 YAML frontmatter）
+- `souls/nl2sql/tables.yaml` 定义角色可访问的数据库表（employee 15张 / student 11张）
 - 工具通过 `@tool` 装饰器或 `registry.register()` 注册在 `app/agent/tools/__init__.py`
+- `generate_report` — 仅 employee 角色可用，调用 `app/reports/generators/` 下的生成器
+- `notify` — student/employee 角色可用，写入通知数据
 
 ## Skills 动态加载
 
@@ -110,7 +113,7 @@ WORKDIR           # 工作目录，默认当前目录
 
 - [x] **1. NL2SQL 自然语言查询**
   - 客户需求：`企业智能助手 → NL2SQL实现：针对上述数据表开发自然语言转SQL功能，支持员工通过口语（如"帮我查一下张三的最近跟进记录"）直接调取数据库信息。`
-  - 当前：已完成 `dbman` 工具（`app/agent/tools/dbman.py`），基于 LLM 的 NL2SQL 引擎 + SQL 安全校验层 + 执行器。按角色控制表权限（employee 14张 / student 10张 / guest 4张）。
+  - 当前：已完成 `dbman` 工具（`app/agent/tools/dbman.py`），基于 LLM 的 NL2SQL 引擎 + SQL 安全校验层 + 执行器。按角色控制表权限（employee 15张 / student 11张）。
 
 - [x] **2. 活动报名闭环**
   - 客户需求：`客服Agent → 活动与讲座报名：支持客户查询近期的线上/线下留学分享会、招生官见面会，并直接完成活动预约与报名，有效沉淀私域流量。`
@@ -123,23 +126,19 @@ WORKDIR           # 工作目录，默认当前目录
   - 需新增：消息推送机制（WebSocket/SSE/邮件）+ 审批状态变更回调通知
 
 - [ ] **4.1 全域客户经营分析报告**
-  - 客户需求：`智能报告 → 全域客户经营分析报告：全面覆盖意向、成交及流失三大核心客群...通过特征聚类精准提炼共性画像...智能归因并预警流失风险。`
-  - 当前：完全未实现
-  - 需新增：report_generator模块 + 数据分析逻辑 + AI洞察生成
+  - 当前：已实现 `app/reports/generators/customer_analysis.py`
+  - 需新增：数据可视化 + AI洞察生成
 
 - [ ] **4.2 员工日报汇总报告（日/周）**
-  - 客户需求：`智能报告 → 员工日报汇总报告：通过日、周等多维时间粒度，对全员提交的工作内容进行自动化梳理与提炼。系统利用AI智能提取日报中的核心进展、关键产出及潜在风险。`
-  - 当前：完全未实现
-  - 需新增：定时汇总任务 + AI摘要生成
+  - 当前：已实现 `app/reports/generators/daily_report_summary.py`
+  - 需新增：定时汇总任务
 
 - [ ] **4.3 学生心理健康周报**
-  - 客户需求：`智能报告 → 学生心理健康周报：基于留学生的日常情绪打卡、学业压力反馈及跨文化适应情况，利用AI智能汇总本周整体心理态势，精准识别存在孤独感、学业焦虑或文化冲突等潜在风险的学生群体。`
-  - 当前：完全未实现
+  - 当前：已实现 `app/reports/generators/psychology_weekly.py`
   - 需新增：情绪趋势分析 + 风险群体识别 + 个性化疏导建议生成
 
 - [ ] **4.4 投诉处理周报**
-  - 客户需求：`智能报告 → 投诉处理周报：实时汇总本周的投诉总量及其同环比变化，利用AI对投诉内容进行智能分类...自动识别长期未决的疑难案件并触发预警。`
-  - 当前：完全未实现
+  - 当前：已实现 `app/reports/generators/complaint_weekly.py`
   - 需新增：投诉统计分析 + 智能分类 + 处理时效追踪
 
 ### P1 - 增强功能
@@ -161,7 +160,7 @@ WORKDIR           # 工作目录，默认当前目录
 
 - [ ] **8. 海外生活知识库数据补充**
   - 客户需求：`学生智能助手 → 生活支持：内置海外生活知识库，提供当地医疗、交通、紧急求助等生活常识问答，做学生身边的本地百事通。`
-  - 当前：RAG架构就绪，`knowledge/` 目录中无海外生活数据
+  - 当前：RAG架构就绪，`knowledge/` 目录已有留学政策（新加坡/德国）和公司信息数据
   - 需新增：数据准备 + 入库脚本
 
 ### P2 - 后续增强

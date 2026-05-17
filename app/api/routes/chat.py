@@ -33,17 +33,19 @@ async def chat(request: Request):
     message = body.get("message", "")
     conversation_id = body.get("conversation_id")
 
-    # Parse JWT token from Authorization header
     token = None
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
 
-    # Load appropriate SOUL based on token
+    user_context = ""
     if token:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             role = payload.get("role", "guest")
+            user_id = payload.get("user_id")
+            username = payload.get("username")
+            user_context = f"\n\n[用户上下文] 当前用户: {username or 'Unknown'} (ID: {user_id})"
             if not soul_manager.is_active() or soul_manager.current_role != role:
                 soul_manager.load(role)
         except jwt.PyJWTError:
@@ -52,7 +54,6 @@ async def chat(request: Request):
         if not soul_manager.is_active():
             soul_manager.load("guest")
 
-    # Load or create session
     if conversation_id:
         messages, _ = session_manager.get_session(conversation_id)
         if messages is None:
@@ -75,7 +76,7 @@ async def chat(request: Request):
     async def event_stream():
         import threading
 
-        captured_system_prompt = soul_manager.get_system_prompt()
+        captured_system_prompt = soul_manager.get_system_prompt() + user_context
 
         def run_agent():
             try:
@@ -88,7 +89,6 @@ async def chat(request: Request):
         thread = threading.Thread(target=run_agent, daemon=True)
         thread.start()
 
-        # Send role info first, then conversation_id
         yield f"data: {json.dumps({'type': 'role', 'role': soul_manager.current_role or 'guest'})}\n\n"
         yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
 

@@ -174,19 +174,31 @@ let currentTab = 'login';
 let employees = [];
 
 async function loadEmployees() {
+  const select = document.getElementById('regAdvisor');
+  if (select) {
+    select.innerHTML = '<option value="">加载中...</option>';
+    select.disabled = true;
+  }
   try {
     const resp = await fetch('/api/employees');
+    if (!resp.ok) throw new Error('Failed to load');
     const data = await resp.json();
     employees = data.employees || [];
     populateAdvisorDropdown();
   } catch (e) {
     console.error('Failed to load employees', e);
+    if (select) {
+      select.innerHTML = '<option value="">加载失败</option>';
+      select.disabled = false;
+    }
+    showErr('加载班主任列表失败，请刷新重试');
   }
 }
 
 function populateAdvisorDropdown() {
   const select = document.getElementById('regAdvisor');
   if (!select) return;
+  select.disabled = false;
   select.innerHTML = '<option value="">请选择班主任</option>';
   employees.forEach(emp => {
     const opt = document.createElement('option');
@@ -293,6 +305,14 @@ document.getElementById('registerForm').onsubmit = async (e) => {
   const btn = document.getElementById('registerBtn');
   btn.textContent = '注册中...';
   btn.disabled = true;
+  const role = document.getElementById('regRole').value;
+  const advisor = document.getElementById('regAdvisor').value;
+  if (role === 'student' && !advisor) {
+    showErr('请选择班主任');
+    btn.textContent = '注册';
+    btn.disabled = false;
+    return;
+  }
   try {
     const regBody = {
       username: document.getElementById('regUser').value,

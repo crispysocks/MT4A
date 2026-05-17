@@ -70,7 +70,10 @@ class NL2SQLEngine:
             messages=[{"role": "user", "content": natural_query}],
             max_tokens=int(os.getenv("NL2SQL_MAX_TOKENS", "2000")),
         )
-        return extract_sql(response.content[0].text)
+        for block in response.content:
+            if hasattr(block, "text") and block.text:
+                return extract_sql(block.text)
+        return ""
 
     def _build_system_prompt(self, role: str, allowed_tables: list[str]) -> str:
         prompt = self.soul_template

@@ -19,6 +19,7 @@ def init_db():
         Course, Event, Registration,
         User, Lead, LeadFollowUp, DailyReport, Complaint, Organization,
         StudentGrade, LeaveRequest, ExamSchedule, PsychologyProfile, PsychologyWarning,
+        Notification,
     )
     SQLModel.metadata.create_all(engine)
     from app.db.seed_data import seed_all

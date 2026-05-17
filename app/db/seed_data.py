@@ -239,13 +239,24 @@ def _seed_users(session: Session):
         {"username": "zhangmingyang", "password_hash": _hash_password("123456"), "role": "employee"},
         {"username": "chensiqi", "password_hash": _hash_password("123456"), "role": "employee"},
         {"username": "wangjianguo", "password_hash": _hash_password("123456"), "role": "employee"},
-        {"username": "student_demo", "password_hash": _hash_password("123456"), "role": "student"},
     ]
     for user_data in users:
         existing = session.exec(select(User).where(User.username == user_data["username"])).first()
         if not existing:
             user = User(**user_data)
             session.add(user)
+
+    advisor = session.exec(select(User).where(User.username == "zhangmingyang")).first()
+    if advisor:
+        existing_student = session.exec(select(User).where(User.username == "student_demo")).first()
+        if not existing_student:
+            student = User(
+                username="student_demo",
+                password_hash=_hash_password("123456"),
+                role="student",
+                class_advisor_id=advisor.id,
+            )
+            session.add(student)
 
 
 def seed_all():

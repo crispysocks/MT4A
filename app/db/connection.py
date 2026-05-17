@@ -12,7 +12,7 @@ DATABASE_URL = (
     f"mysql+mysqlconnector://"
     f"{DATABASE_USER}:{DATABASE_PASSWORD}@"
     f"{DATABASE_HOST}:{DATABASE_PORT}/"
-    f"{DATABASE_NAME}"
+    f"{DATABASE_NAME}?charset=utf8mb4"
 )
 
 def ensure_database():

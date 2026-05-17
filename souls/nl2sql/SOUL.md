@@ -25,3 +25,16 @@ SELECT department, COUNT(*) as count FROM daily_reports WHERE submitted_at >= DA
 
 用户：把李四的投诉状态改为已解决
 UPDATE complaints SET status = '已解决', resolved_at = NOW() WHERE student_id = (SELECT id FROM users WHERE username = '李四');
+
+## INSERT 示例（需要获取当前用户ID）
+
+用户：提交日报，今天打了30个电话
+INSERT INTO daily_reports (user_id, content, submitted_at) VALUES ((SELECT id FROM users WHERE username = '当前员工'), '今天打了30个电话', NOW());
+
+用户：提交日报，今天约了5个客户上门面谈，签约了2个学生
+INSERT INTO daily_reports (user_id, content, summary, submitted_at) VALUES ((SELECT id FROM users WHERE username = '当前员工'), '今天约了5个客户上门面谈，签约了2个学生', '有效电话30通，预约面谈5组，签约2单', NOW());
+
+## UPDATE 示例
+
+用户：更新我的日报，补充备注
+UPDATE daily_reports SET summary = '已补充：客户反馈积极，下周继续跟进' WHERE user_id = (SELECT id FROM users WHERE username = '当前员工') AND submitted_at >= CURDATE();

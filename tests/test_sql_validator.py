@@ -64,3 +64,56 @@ def test_select_with_limit_not_duplicated():
     result = v.validate("SELECT * FROM users LIMIT 10")
     assert result.is_valid is True
     assert result.sql.upper().count("LIMIT") == 1
+
+
+from sqlmodel import SQLModel, create_engine, Session, Field
+from typing import Optional
+
+class _TestUser(SQLModel, table=True):
+    __tablename__ = "test_users"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    role: str = "student"
+
+def test_executor_select():
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(_TestUser(name="张三", role="student"))
+        session.commit()
+
+    from app.agent.tools.sql_validator import SQLExecutor
+    ex = SQLExecutor(engine)
+    result = ex.execute("SELECT * FROM test_users")
+    assert "rows" in result
+    assert len(result["rows"]) == 1
+    assert result["rows"][0]["name"] == "张三"
+
+def test_executor_insert():
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+
+    from app.agent.tools.sql_validator import SQLExecutor
+    ex = SQLExecutor(engine)
+    result = ex.execute("INSERT INTO test_users (name, role) VALUES ('李四', 'employee')")
+    assert "affected_rows" in result
+    assert result["affected_rows"] == 1
+
+def test_executor_update():
+    engine = create_engine("sqlite:///:memory:")
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(_TestUser(name="王五", role="student"))
+        session.commit()
+
+    from app.agent.tools.sql_validator import SQLExecutor
+    ex = SQLExecutor(engine)
+    result = ex.execute("UPDATE test_users SET role = 'admin' WHERE name = '王五'")
+    assert result["affected_rows"] == 1
+
+def test_executor_error():
+    engine = create_engine("sqlite:///:memory:")
+    from app.agent.tools.sql_validator import SQLExecutor
+    ex = SQLExecutor(engine)
+    result = ex.execute("SELECT * FROM nonexistent_table")
+    assert "error" in result

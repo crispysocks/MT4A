@@ -1,6 +1,7 @@
 """SQL 安全校验层 + 执行器"""
 from dataclasses import dataclass
 import re
+from sqlalchemy import text
 
 
 @dataclass
@@ -53,3 +54,27 @@ class SQLValidator:
             if m:
                 return m.group(1).lower()
         return None
+
+
+class SQLExecutor:
+    def __init__(self, engine=None):
+        from app.db.connection import engine as production_engine
+        self.engine = engine or production_engine
+
+    def execute(self, sql: str) -> dict:
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql))
+                conn.commit()
+
+                if sql.strip().upper().startswith("SELECT"):
+                    rows = [dict(row._mapping) for row in result.fetchall()]
+                    for row in rows:
+                        for k, v in row.items():
+                            if hasattr(v, "isoformat"):
+                                row[k] = v.isoformat()
+                    return {"rows": rows, "count": len(rows)}
+                else:
+                    return {"affected_rows": result.rowcount}
+        except Exception as e:
+            return {"error": str(e)}

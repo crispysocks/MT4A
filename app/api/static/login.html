@@ -116,11 +116,19 @@ body {
         </div>
         <div>
           <label class="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">身份</label>
-          <select id="regRole"
+          <select id="regRole" onchange="toggleAdvisorField()"
             class="w-full px-4 py-3 bg-paper border border-border rounded-xl text-sm text-ink outline-none transition-all duration-200 focus:border-student focus:ring-2 focus:ring-student/10 appearance-none cursor-pointer"
             style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2378716C%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
             <option value="student">学生</option>
             <option value="employee">员工 / 老师</option>
+          </select>
+        </div>
+        <div id="advisorField" class="hidden space-y-1">
+          <label class="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">班主任</label>
+          <select id="regAdvisor"
+            class="w-full px-4 py-3 bg-paper border border-border rounded-xl text-sm text-ink outline-none transition-all duration-200 focus:border-student focus:ring-2 focus:ring-student/10 appearance-none cursor-pointer"
+            style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2378716C%22 stroke-width=%222%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+            <option value="">请选择班主任</option>
           </select>
         </div>
       </div>
@@ -163,6 +171,45 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 let currentTab = 'login';
+let employees = [];
+
+async function loadEmployees() {
+  try {
+    const resp = await fetch('/api/employees');
+    const data = await resp.json();
+    employees = data.employees || [];
+    populateAdvisorDropdown();
+  } catch (e) {
+    console.error('Failed to load employees', e);
+  }
+}
+
+function populateAdvisorDropdown() {
+  const select = document.getElementById('regAdvisor');
+  if (!select) return;
+  select.innerHTML = '<option value="">请选择班主任</option>';
+  employees.forEach(emp => {
+    const opt = document.createElement('option');
+    opt.value = emp.id;
+    opt.textContent = emp.username;
+    select.appendChild(opt);
+  });
+}
+
+function toggleAdvisorField() {
+  const role = document.getElementById('regRole')?.value;
+  const advisorField = document.getElementById('advisorField');
+  if (!advisorField) return;
+  if (role === 'student') {
+    advisorField.classList.remove('hidden');
+    advisorField.classList.add('block');
+  } else {
+    advisorField.classList.add('hidden');
+    advisorField.classList.remove('block');
+    const select = document.getElementById('regAdvisor');
+    if (select) select.value = '';
+  }
+}
 
 function switchTab(tab) {
   currentTab = tab;
@@ -184,6 +231,9 @@ function switchTab(tab) {
   loginForm.classList.toggle('hidden', tab !== 'login');
   registerForm.classList.toggle('hidden', tab !== 'register');
   hideMessages();
+  if (tab === 'register') {
+    loadEmployees();
+  }
 }
 
 function showErr(msg) {
@@ -244,14 +294,21 @@ document.getElementById('registerForm').onsubmit = async (e) => {
   btn.textContent = '注册中...';
   btn.disabled = true;
   try {
+    const regBody = {
+      username: document.getElementById('regUser').value,
+      password: document.getElementById('regPass').value,
+      role: document.getElementById('regRole').value
+    };
+    if (regBody.role === 'student') {
+      const advisorVal = document.getElementById('regAdvisor')?.value;
+      if (advisorVal) {
+        regBody.class_advisor_id = parseInt(advisorVal);
+      }
+    }
     const resp = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: document.getElementById('regUser').value,
-        password: document.getElementById('regPass').value,
-        role: document.getElementById('regRole').value
-      })
+      body: JSON.stringify(regBody)
     });
     const data = await resp.json();
     if (!resp.ok) {

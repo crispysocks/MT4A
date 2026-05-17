@@ -53,6 +53,7 @@ class User(SQLModel, table=True):
     username: str = Field(max_length=50, unique=True, index=True)
     password_hash: str = Field(max_length=255)
     role: str = Field(max_length=20)
+    class_advisor_id: Optional[int] = Field(default=None, foreign_key="users.id", index=True)
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())
 
 

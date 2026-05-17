@@ -68,7 +68,7 @@ uv sync
 ### 3. 启动服务
 
 ```bash
-uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn app.api.main:app --reload
 ```
 
 访问 http://localhost:8000 查看 Web 界面。

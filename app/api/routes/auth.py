@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.db.connection import get_session
+from app.db.models import User
 from app.agent.auth import AuthManager
 from app.agent.soul import SoulManager
 
@@ -63,3 +64,16 @@ def me():
     if not soul_manager.is_active():
         return {"role": "guest"}
     return {"role": soul_manager.current_role}
+
+
+@router.get("/employees")
+def list_employees(session: Session = Depends(get_session)):
+    employees = session.exec(
+        select(User).where(User.role == "employee")
+    ).all()
+    return {
+        "employees": [
+            {"id": e.id, "username": e.username}
+            for e in employees
+        ]
+    }

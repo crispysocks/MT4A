@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from .routes import chat, sessions
+from .routes import chat, sessions, notifications_router
 from .routes.auth import router as auth_router
 
 app = FastAPI(title="mt4a Agent API")
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):

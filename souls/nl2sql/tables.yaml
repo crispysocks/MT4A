@@ -1,0 +1,34 @@
+# 角色可访问的数据库表配置
+employee:
+  - users
+  - leads
+  - lead_follow_ups
+  - daily_reports
+  - complaints
+  - organization
+  - student_grades
+  - leave_requests
+  - exam_schedule
+  - psychology_profiles
+  - psychology_warnings
+  - courses
+  - events
+  - registrations
+
+student:
+  - users
+  - student_grades
+  - leave_requests
+  - exam_schedule
+  - psychology_profiles
+  - psychology_warnings
+  - complaints
+  - courses
+  - events
+  - registrations
+
+guest:
+  - users
+  - courses
+  - events
+  - registrations

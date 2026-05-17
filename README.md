@@ -65,6 +65,14 @@ cp .env.example .env
 uv sync
 ```
 
+### 2.1 文件解析工具（可选）
+
+客户研判功能需要 markitdown 解析文件：
+
+```bash
+uv tool install "markitdown[docx,pptx,xlsx,pdf]"
+```
+
 ### 3. 启动服务
 
 ```bash

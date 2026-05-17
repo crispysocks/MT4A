@@ -22,36 +22,47 @@ class SessionManager:
         }
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[list]:
+    def get_session(self, session_id: str) -> Optional[tuple[list, Optional[str]]]:
         if session_id in self._sessions:
-            return self._sessions[session_id]
+            return self._sessions[session_id], None
         
-        # 从磁盘加载
         path = self.persist_dir / f"{session_id}.json"
         if path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
             messages = data.get("messages", [])
+            system_prompt = None
+            if messages and messages[0].get("role") == "system":
+                system_prompt = messages[0].get("content")
+                messages = messages[1:]
             self._sessions[session_id] = messages
             self._metadata[session_id] = {
                 "id": session_id,
                 "created_at": data.get("created_at"),
                 "updated_at": data.get("updated_at"),
+                "role": data.get("role"),
             }
-            return messages
+            return messages, system_prompt
         
-        return None
+        return None, None
 
-    def save_session(self, session_id: str) -> None:
+    def get_messages(self, session_id: str) -> Optional[list]:
+        result = self.get_session(session_id)
+        if result is None:
+            return None
+        return result[0]
+
+    def save_session(self, session_id: str, system_prompt: Optional[str] = None) -> None:
         if session_id not in self._sessions:
             return
         
         messages = self._sessions[session_id]
         meta = self._metadata.get(session_id, {})
         
+        all_messages = [{"role": "system", "content": system_prompt or ""}] + messages
         data = {
             "id": session_id,
             "model": "qwen3.6-plus",
-            "messages": messages,
+            "messages": all_messages,
             "created_at": meta.get("created_at"),
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }

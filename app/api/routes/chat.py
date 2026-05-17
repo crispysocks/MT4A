@@ -54,13 +54,13 @@ async def chat(request: Request):
 
     # Load or create session
     if conversation_id:
-        messages = session_manager.get_session(conversation_id)
+        messages, _ = session_manager.get_session(conversation_id)
         if messages is None:
             conversation_id = session_manager.create_session()
-            messages = session_manager.get_session(conversation_id)
+            messages, _ = session_manager.get_session(conversation_id)
     else:
         conversation_id = session_manager.create_session()
-        messages = session_manager.get_session(conversation_id)
+        messages, _ = session_manager.get_session(conversation_id)
 
     messages.append({"role": "user", "content": message})
 
@@ -75,9 +75,11 @@ async def chat(request: Request):
     async def event_stream():
         import threading
 
+        captured_system_prompt = soul_manager.get_system_prompt()
+
         def run_agent():
             try:
-                agent_loop(messages, stream_callback=stream_callback)
+                agent_loop(messages, stream_callback=stream_callback, system_prompt=captured_system_prompt)
             except Exception as e:
                 queue.put_nowait({"type": "error", "content": str(e)})
             finally:
@@ -93,7 +95,7 @@ async def chat(request: Request):
         while True:
             item = await queue.get()
             if item["type"] == "done":
-                session_manager.save_session(conversation_id)
+                session_manager.save_session(conversation_id, system_prompt=soul_manager.get_system_prompt())
                 yield f"data: {json.dumps({'type': 'done'})}\n\n"
                 break
             elif item["type"] == "error":

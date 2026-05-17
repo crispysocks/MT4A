@@ -160,14 +160,18 @@ Skills: {SKILLS.descriptions()}"""
 # ---------------------------------------------------------------------------
 # Agent loop
 # ---------------------------------------------------------------------------
-def agent_loop(messages: list, stream_callback=None):
+def agent_loop(messages: list, stream_callback=None, system_prompt: str = None):
     """
     Agent 主循环
     
     Args:
         messages: 消息列表（会被原地修改）
         stream_callback: 可选回调，每次 LLM 输出 token 时调用 callback(text: str)
+        system_prompt: 可选，覆盖 soul_manager 的 system prompt
     """
+    if system_prompt is None:
+        system_prompt = soul_manager.get_system_prompt()
+    active_system_prompt = system_prompt
     rounds_without_todo = 0
     while True:
         microcompact(messages)
@@ -178,7 +182,7 @@ def agent_loop(messages: list, stream_callback=None):
         if stream_callback:
             # 流式模式（支持工具调用）
             response_stream = client.messages.create(
-                model=MODEL, system=soul_manager.get_system_prompt(), messages=messages,
+                model=MODEL, system=active_system_prompt, messages=messages,
                 tools=registry.list(allowed_tools=soul_manager.get_tools() or None),
                 max_tokens=8000, stream=True,
             )
@@ -281,7 +285,7 @@ def agent_loop(messages: list, stream_callback=None):
         else:
             # 同步模式（原有逻辑）
             response = client.messages.create(
-                model=MODEL, system=soul_manager.get_system_prompt(), messages=messages,
+                model=MODEL, system=active_system_prompt, messages=messages,
                 tools=registry.list(allowed_tools=soul_manager.get_tools() or None),
                 max_tokens=8000,
             )

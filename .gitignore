@@ -24,3 +24,17 @@ docs/superpowers/
 tests
 
 .env
+
+# 报告生成文件（仅忽略根目录下的 reports/）
+/reports/
+
+
+# 对话压缩日志
+.transcripts/
+
+# IDE 配置
+.idea/
+.vscode/
+
+# 日志文件
+*.log

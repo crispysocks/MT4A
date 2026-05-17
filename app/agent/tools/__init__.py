@@ -3,6 +3,7 @@ from .bash import run_bash
 from .file import run_read, run_write, run_edit
 from .rag import knowledge_search
 from .dbman import dbman
+from .report_generator import generate_report
 from .notify import notify
 
 # ---------------------------------------------------------------------------

@@ -58,6 +58,8 @@ def dbman(nl: str) -> str:
         if not sql or not any(kw in sql.upper() for kw in ["SELECT", "INSERT", "UPDATE", "DELETE"]):
             return "未能理解您的查询，请换一种说法。"
 
+        # 表格访问限制：提示词层（LLM指令）+ 验证器层（防御纵深）
+        # LLM 根据 allowed_tables 生成 SQL，validator 作二次兜底检查
         validator = SQLValidator(allowed_tables)
         validation = validator.validate(sql)
         if not validation.is_valid:

@@ -2,7 +2,7 @@ from .registry import registry, tool, ToolRegistry
 from .bash import run_bash
 from .file import run_read, run_write, run_edit
 from .rag import knowledge_search
-from .db import db_query
+from .dbman import dbman
 
 # ---------------------------------------------------------------------------
 # Core tool handlers (depend on core.py objects, imported lazily)
@@ -49,19 +49,19 @@ _TOOL_DEFS: dict = {
         {"type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer"}}, "required": ["query"]},
         "Search knowledge base for relevant information.",
     ),
-    "db_query": (
-        db_query,
+    "dbman": (
+        dbman,
         {
             "type": "object",
             "properties": {
-                "operation": {"type": "string", "enum": ["select", "insert", "update", "delete"], "description": "Database operation to perform"},
-                "table": {"type": "string", "enum": ["courses", "events", "registrations", "users", "leads", "lead_follow_ups", "daily_reports", "complaints", "organization", "student_grades", "leave_requests", "exam_schedule", "psychology_profiles", "psychology_warnings"], "description": "Table to query or modify"},
-                "conditions": {"type": "string", "description": "JSON string of field=value filters, e.g. '{\"status\": \"active\"}'"},
-                "data": {"type": "object", "description": "Field values for insert/update operations"},
+                "nl": {
+                    "type": "string",
+                    "description": "用自然语言描述你想查询或操作的数据，例如：'帮我查一下张三的最近跟进记录'",
+                },
             },
-            "required": ["operation", "table"],
+            "required": ["nl"],
         },
-        "Query or modify database. Use operation='select' with optional conditions (JSON string) to filter results. Use operation='insert' with data dict to add records. Use operation='update' with conditions and data to modify records. Use operation='delete' with conditions to remove records.",
+        "数据库操作工具，支持自然语言查询和修改。可以说'查一下所有待审批的请假'或'把李四的投诉改为已解决'。",
     ),
     "TodoWrite": (
         _todo_write_handler,

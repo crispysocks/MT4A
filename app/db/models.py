@@ -172,7 +172,7 @@ class Notification(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id")
     notification_type: str = Field(max_length=50)
-    status: str = Field(default="active", max_length=50)
+    status: Optional[str] = Field(default="active", max_length=50)
     operation_type: str = Field(max_length=50)
     content_summary: str = Field()
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())

@@ -79,8 +79,31 @@ body { font-family: var(--tw-font-body); background: var(--tw-color-surface); co
     <div id="logo-dot" class="w-2 h-2 rounded-full animate-pulse-slow"></div>
     <span id="logo-text" class="font-display text-base tracking-wide"></span>
   </div>
-  <button id="logout-btn" onclick="logout()" class="px-4 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 hover:opacity-80">登出</button>
+  <div class="flex items-center gap-3">
+    <button id="notification-btn" onclick="toggleNotifications()" class="relative px-2 py-1 text-white rounded-lg transition-all duration-200 hover:opacity-80" style="background: rgba(255,255,255,0.15);" title="通知">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+      </svg>
+      <span id="notification-badge" class="hidden absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">0</span>
+    </button>
+    <button id="logout-btn" onclick="logout()" class="px-4 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 hover:opacity-80">登出</button>
+  </div>
 </header>
+
+<!-- Notification Popup -->
+<div id="notification-popup" class="hidden fixed right-4 top-14 w-80 max-h-96 bg-white rounded-xl shadow-2xl border overflow-hidden z-50">
+  <div class="px-4 py-3 border-b flex items-center justify-between bg-gray-50">
+    <span class="text-sm font-semibold text-gray-700">通知</span>
+    <button onclick="toggleNotifications()" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div id="notification-list" class="overflow-y-auto max-h-80 divide-y">
+    <div class="px-4 py-6 text-center text-sm text-gray-400">暂无通知</div>
+  </div>
+</div>
 
 <!-- Guest Banner -->
 <div id="guest-banner" class="hidden bg-amber-50 border-b border-amber-100 px-5 py-2 text-center text-sm text-amber-800">
@@ -492,8 +515,91 @@ inputEl.addEventListener('keydown', (e) => {
   }
 });
 
+// ── Notifications ──
+async function fetchNotifications() {
+  if (!token) return;
+  try {
+    const resp = await fetch('/api/notifications?status=active', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    renderNotifications(data.notifications || []);
+  } catch (e) { console.error('Notifications:', e); }
+}
+
+function renderNotifications(notifications) {
+  const badge = document.getElementById('notification-badge');
+  const list = document.getElementById('notification-list');
+
+  if (notifications.length === 0) {
+    badge.classList.add('hidden');
+    list.innerHTML = '<div class="px-4 py-6 text-center text-sm text-gray-400">暂无通知</div>';
+    return;
+  }
+
+  badge.classList.remove('hidden');
+  badge.textContent = notifications.length;
+
+  list.innerHTML = notifications.map(n => {
+    const typeLabels = {
+      leave_request: '请假申请',
+      leave_result: '请假结果',
+      complaint: '投诉',
+      complaint_result: '投诉结果',
+      exam_reminder: '考试提醒',
+      psychology_warning: '心理预警',
+      progress_update: '进度更新',
+      todo_reminder: '待办提醒',
+    };
+    const label = typeLabels[n.notification_type] || n.notification_type;
+    const time = n.created_at ? new Date(n.created_at).toLocaleString('zh-CN') : '';
+
+    return `<div class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all" onclick="dismissNotification(${n.id})">
+      <div class="text-sm text-gray-800">${n.content_summary}</div>
+      <div class="flex items-center justify-between mt-1">
+        <span class="text-xs text-gray-400">${label}</span>
+        <span class="text-xs text-gray-300">${time}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function dismissNotification(id) {
+  try {
+    await fetch(`/api/notifications/${id}/action`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ operation_type: 'read' })
+    });
+    fetchNotifications();
+  } catch (e) { console.error('Dismiss:', e); }
+}
+
+function toggleNotifications() {
+  const popup = document.getElementById('notification-popup');
+  popup.classList.toggle('hidden');
+  if (!popup.classList.contains('hidden')) {
+    fetchNotifications();
+  }
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('notification-popup');
+  const btn = document.getElementById('notification-btn');
+  if (popup && btn && !popup.classList.contains('hidden') &&
+      !popup.contains(e.target) && !btn.contains(e.target)) {
+    popup.classList.add('hidden');
+  }
+});
+
 // ── Init ──
 loadSessions();
+fetchNotifications();
 </script>
 </body>
 </html>

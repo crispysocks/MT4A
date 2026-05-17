@@ -35,6 +35,7 @@
 student:
   - knowledge_search  # 搜索知识库（留学政策、院校信息）
   - dbman             # 自然语言数据库操作（成绩/请假/投诉等）
+  - notify            # 通知写入工具
   # - TodoWrite         # 任务列表管理
   # - compress          # 上下文压缩
 
@@ -42,6 +43,7 @@ employee:
   - knowledge_search  # 搜索知识库（内部制度、新人指南）
   - dbman             # 自然语言数据库操作（客户跟进、日报、组织架构）
   - generate_report   # 生成智能报告（员工日报/客户分析/心理周报/投诉周报）
+  - notify            # 通知写入工具
   # - TodoWrite         # 任务列表管理
   # - compress          # 上下文压缩
 

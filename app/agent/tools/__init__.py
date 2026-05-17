@@ -4,6 +4,7 @@ from .file import run_read, run_write, run_edit
 from .rag import knowledge_search
 from .dbman import dbman
 from .report_generator import generate_report
+from .notify import notify
 
 # ---------------------------------------------------------------------------
 # Core tool handlers (depend on core.py objects, imported lazily)
@@ -63,6 +64,32 @@ _TOOL_DEFS: dict = {
             "required": ["nl"],
         },
         "数据库操作工具，支持自然语言查询和修改。可以说'查一下所有待审批的请假'或'把李四的投诉改为已解决'。",
+    ),
+    "notify": (
+        notify,
+        {
+            "type": "object",
+            "properties": {
+                "notification_type": {
+                    "type": "string",
+                    "description": "通知类型: leave_request/leave_result/complaint/complaint_result/exam_reminder/psychology_warning/progress_update/todo_reminder",
+                },
+                "user_id": {
+                    "type": "integer",
+                    "description": "接收通知的用户ID",
+                },
+                "operation_type": {
+                    "type": "string",
+                    "description": "操作类型: read/confirm/dismiss/approve/reject/handle/resolve/intervene",
+                },
+                "content_summary": {
+                    "type": "string",
+                    "description": "通知摘要内容",
+                },
+            },
+            "required": ["notification_type", "user_id", "operation_type", "content_summary"],
+        },
+        "写入通知记录到数据库，用户登录后可查看。",
     ),
     "TodoWrite": (
         _todo_write_handler,

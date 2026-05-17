@@ -21,6 +21,8 @@ def init_db():
         StudentGrade, LeaveRequest, ExamSchedule, PsychologyProfile, PsychologyWarning,
     )
     SQLModel.metadata.create_all(engine)
+    from app.db.seed_data import seed_all
+    seed_all()
 
 
 def init_db_on_startup():

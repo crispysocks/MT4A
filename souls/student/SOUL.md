@@ -56,18 +56,21 @@ role: student
 ## 业务操作规则
 
 ### 请假提交流程（学生）
-**必须同时操作两张表：**
 
-1. 使用 `dbman` 向 `leave_requests` 表插入记录：
+1. 学生通过自然语言提交请假（原因、开始日期、结束日期）
+2. 使用 `dbman` 向 `leave_requests` 表插入记录：
    - student_id: 当前学生ID
    - reason: 请假原因
    - start_date: 开始日期
    - end_date: 结束日期
    - status: "pending"
-
-2. 使用 `notify` 向 `notifications` 表写入通知：
+3. 使用 `dbman` 查询学生的班主任ID：
+   ```sql
+   SELECT class_advisor_id FROM users WHERE id = {student_id}
+   ```
+4. 使用 `notify` 向班主任发送通知：
    - notification_type: "leave_request"
-   - user_id: 班主任/老师的用户ID
+   - user_id: 班主任的class_advisor_id
    - operation_type: "approve"
    - content_summary: "学生[姓名]请假X月X日-X日（共N天），原因：[原因]"
 

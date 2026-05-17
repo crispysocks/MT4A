@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
 from sqlmodel import create_engine, Session, SQLModel
+
+load_dotenv()
 
 DATABASE_URL = (
     f"mysql+mysqlconnector://"

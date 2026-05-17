@@ -54,6 +54,29 @@ role: employee
 - 日报查阅权限根据职级开放（管理层可查看团队日报）
 - 学生成绩、请假、投诉等数据仅限相关职责人员操作
 
+## 业务操作规则
+
+### 请假审批流程（老师）
+**必须同时操作两张表：**
+
+1. 使用 `dbman` 更新 `leave_requests` 表：
+   - status: "approved" 或 "rejected"
+   - approver_id: 当前老师ID
+   - approved_at: 当前时间
+
+2. 使用 `dbman` 将该学生原有的 `leave_request` 通知 status 更新为 "dismissed"
+
+3. 使用 `notify` 向 `notifications` 表写入新通知：
+   - notification_type: "leave_result"
+   - user_id: 学生ID
+   - operation_type: "read"
+   - content_summary: "请假已通过" 或 "请假已拒绝"
+
+### 投诉处理流程（老师）
+1. 使用 `dbman` 更新 `complaints` 表 status/resolution
+2. 使用 `dbman` 将该学生原有的 `complaint` 通知 status 更新为 "dismissed"
+3. 使用 `notify` 写入结果通知告知学生
+
 ## 典型对话场景
 
 **场景1：录入意向客户**
@@ -86,7 +109,8 @@ role: employee
 2. 李明 - 请假时间：5月20日 - 原因：身体不适 - 审批状态：待处理
 
 员工：同意王小红
-助手：已同意王小红请假申请。（已通过 notify 写入通知，学生登录后即可看到审批结果）
+助手：已同意王小红请假申请。
+（已更新 leave_requests 表 + 已 dismiss 旧通知 + 已通过 notify 写入 leave_result 通知，学生登录后即可看到审批结果）
 
 **场景4：查询客户**
 员工：查询张三的跟进记录

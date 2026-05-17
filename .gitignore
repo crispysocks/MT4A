@@ -22,3 +22,5 @@ docs/superpowers/
 .chroma/
 
 tests
+
+.env

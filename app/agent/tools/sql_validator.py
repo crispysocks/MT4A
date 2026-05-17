@@ -40,6 +40,10 @@ class SQLValidator:
         if sql_upper.startswith("SELECT") and "LIMIT" not in sql_upper:
             sql = sql.rstrip(";") + f" LIMIT {self.max_rows}"
 
+        # NOTE: INSERT/UPDATE/DELETE don't get automatic LIMIT
+        # - UPDATE/DELETE are protected by mandatory WHERE clause
+        # - INSERT has no row limit (single statement inserts new rows only)
+
         return ValidationResult(True, sql)
 
     def _extract_table(self, sql_upper: str) -> str | None:

@@ -1,5 +1,7 @@
 """dbman — 统一数据库操作工具（自然语言入口）"""
 import os
+import threading
+import traceback
 import yaml
 from pathlib import Path
 from anthropic import Anthropic
@@ -7,6 +9,7 @@ from anthropic import Anthropic
 from app.agent.tools.nl2sql import NL2SQLEngine, SchemaExtractor, extract_sql
 from app.agent.tools.sql_validator import SQLValidator, SQLExecutor
 
+_lock = threading.Lock()
 _nl2sql_engine = None
 _tables_config = None
 
@@ -14,30 +17,34 @@ _tables_config = None
 def _load_tables_config() -> dict:
     global _tables_config
     if _tables_config is None:
-        config_path = Path("souls/nl2sql/tables.yaml")
-        if config_path.exists():
-            with open(config_path, encoding="utf-8") as f:
-                _tables_config = yaml.safe_load(f) or {}
-        else:
-            _tables_config = {}
+        with _lock:
+            if _tables_config is None:
+                config_path = Path("souls/nl2sql/tables.yaml")
+                if config_path.exists():
+                    with open(config_path, encoding="utf-8") as f:
+                        _tables_config = yaml.safe_load(f) or {}
+                else:
+                    _tables_config = {}
     return _tables_config
 
 
 def _get_engine() -> NL2SQLEngine:
     global _nl2sql_engine
     if _nl2sql_engine is None:
-        client = Anthropic(
-            base_url=os.getenv("LLM_BASE_URL"),
-            api_key=os.getenv("LLM_AUTH_TOKEN"),
-        )
-        schema = SchemaExtractor().extract()
-        soul_path = Path("souls/nl2sql/SOUL.md")
-        soul_template = soul_path.read_text(encoding="utf-8") if soul_path.exists() else ""
-        if soul_template.startswith("---"):
-            parts = soul_template.split("---", 2)
-            if len(parts) >= 3:
-                soul_template = parts[2].strip()
-        _nl2sql_engine = NL2SQLEngine(client, schema, soul_template)
+        with _lock:
+            if _nl2sql_engine is None:
+                client = Anthropic(
+                    base_url=os.getenv("LLM_BASE_URL"),
+                    api_key=os.getenv("LLM_AUTH_TOKEN"),
+                )
+                schema = SchemaExtractor().extract()
+                soul_path = Path("souls/nl2sql/SOUL.md")
+                soul_template = soul_path.read_text(encoding="utf-8") if soul_path.exists() else ""
+                if soul_template.startswith("---"):
+                    parts = soul_template.split("---", 2)
+                    if len(parts) >= 3:
+                        soul_template = parts[2].strip()
+                _nl2sql_engine = NL2SQLEngine(client, schema, soul_template)
     return _nl2sql_engine
 
 
@@ -82,6 +89,7 @@ def dbman(nl: str) -> str:
         return "操作完成。"
 
     except Exception as e:
+        traceback.print_exc()
         return f"错误：{e}"
 
 

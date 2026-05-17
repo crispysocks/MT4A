@@ -68,7 +68,7 @@ class NL2SQLEngine:
             model=os.environ.get("MODEL_ID", "qwen3.6-plus"),
             system=system_prompt,
             messages=[{"role": "user", "content": natural_query}],
-            max_tokens=2000,
+            max_tokens=int(os.getenv("NL2SQL_MAX_TOKENS", "2000")),
         )
         return extract_sql(response.content[0].text)
 

@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 class ActionRequest(BaseModel):
-    operation_type: str
+    operation_type: str = "read"
 
 
 @router.get("/notifications")

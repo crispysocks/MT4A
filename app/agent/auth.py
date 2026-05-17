@@ -2,7 +2,7 @@ import os
 import jwt
 import bcrypt
 from datetime import datetime, timezone, timedelta
-from typing import Tuple
+from typing import Optional, Tuple
 from sqlmodel import Session, select
 from app.db.models import User
 
@@ -22,7 +22,7 @@ class AuthManager:
     def __init__(self, session: Session):
         self.session = session
 
-    def register(self, username: str, password: str, role: str) -> User:
+    def register(self, username: str, password: str, role: str, class_advisor_id: Optional[int] = None) -> User:
         existing = self.session.exec(
             select(User).where(User.username == username)
         ).first()
@@ -32,6 +32,7 @@ class AuthManager:
             username=username,
             password_hash=hash_password(password),
             role=role,
+            class_advisor_id=class_advisor_id if role == "student" else None
         )
         self.session.add(user)
         self.session.commit()

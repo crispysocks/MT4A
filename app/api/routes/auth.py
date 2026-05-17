@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -15,6 +16,7 @@ class RegisterRequest(BaseModel):
     username: str
     password: str
     role: str
+    class_advisor_id: Optional[int] = None
 
 
 class LoginRequest(BaseModel):
@@ -30,9 +32,17 @@ def register(req: RegisterRequest, session: Session = Depends(get_session)):
         raise HTTPException(400, "username too short")
     if len(req.password) < 4:
         raise HTTPException(400, "password too short")
+    if req.role == "student":
+        if not req.class_advisor_id:
+            raise HTTPException(400, "学生必须选择班主任")
+        advisor = session.get(User, req.class_advisor_id)
+        if not advisor:
+            raise HTTPException(400, "班主任不存在")
+        if advisor.role != "employee":
+            raise HTTPException(400, "班主任必须是员工角色")
     try:
         auth = AuthManager(session)
-        user = auth.register(req.username, req.password, req.role)
+        user = auth.register(req.username, req.password, req.role, req.class_advisor_id)
         return {
             "id": user.id,
             "username": user.username,

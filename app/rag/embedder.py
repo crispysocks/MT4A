@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 class Embedder:
-    def __init__(self, api_key: str = None, model: str = "text-embedding-v3"):
+    def __init__(self, api_key: str = None, base_url: str = None, model: str = None):
         self.api_key = api_key or os.getenv("EMBEDDINGS_API_KEY")
-        self.model = model
-        self.base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        self.base_url = base_url or os.getenv("EMBEDDINGS_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+        self.model = model or os.getenv("EMBEDDINGS_MODEL", "text-embedding-v3")
 
     def embed(self, texts: List[str]) -> List[List[float]]:
         import httpx

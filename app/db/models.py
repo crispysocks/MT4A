@@ -164,3 +164,16 @@ class PsychologyWarning(SQLModel, table=True):
     status: Optional[str] = Field(default="active", max_length=50)
     handler_id: Optional[int] = Field(default=None, foreign_key="users.id")
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())
+
+
+class Notification(SQLModel, table=True):
+    __tablename__ = "notifications"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    notification_type: str = Field(max_length=50)
+    status: str = Field(default="active", max_length=50)
+    operation_type: str = Field(max_length=50)
+    content_summary: str = Field()
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now())

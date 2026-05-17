@@ -89,10 +89,23 @@ role: employee
    - content_summary: "请假已通过" 或 "请假已拒绝"
 
 ### 投诉处理流程（老师）
-1. 使用 `dbman` 更新 `complaints` 表 status/resolution
-2. 使用 `dbman` 查询该投诉关联的学生ID（student_id），然后将该学生原有的 `complaint` 通知 status 更新为 "dismissed"
-3. 使用 `notify` 写入结果通知告知学生：
+**必须同时操作两张表：**
+
+1. 使用 `dbman` 更新 `complaints` 表：
+   - status: "resolved"
+   - resolution: 解决方案内容
+   - handler_id: 当前老师ID
+   - resolved_at: 当前时间
+
+2. 使用 `dbman` 将该学生原有的 `complaint` 通知 status 更新为 "dismissed"：
+   - 先用 `dbman` 查询该投诉关联的学生ID（student_id）
+   - 再用 `dbman` UPDATE 该学生的 complaint 通知（notification_type="complaint" 且 user_id 为老师ID），status 改为 "dismissed"
+
+3. 使用 `notify` 向 `notifications` 表写入新通知：
+   - notification_type: "complaint_result"
    - user_id: **上一步查到的学生ID**
+   - operation_type: "resolved"
+   - content_summary: "您的投诉已解决：{resolution}"
 
 ## 典型对话场景
 

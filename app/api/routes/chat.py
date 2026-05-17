@@ -68,9 +68,9 @@ async def chat(request: Request):
     queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
 
-    def stream_callback(text: str):
+    def stream_callback(text: str, event_type: str = "content"):
         loop.call_soon_threadsafe(
-            queue.put_nowait, {"type": "content", "content": text}
+            queue.put_nowait, {"type": event_type, "content": text}
         )
 
     async def event_stream():
@@ -84,6 +84,7 @@ async def chat(request: Request):
             except Exception as e:
                 queue.put_nowait({"type": "error", "content": str(e)})
             finally:
+                queue.put_nowait({"type": "thinking_done"})
                 queue.put_nowait({"type": "done"})
 
         thread = threading.Thread(target=run_agent, daemon=True)
@@ -101,6 +102,10 @@ async def chat(request: Request):
             elif item["type"] == "error":
                 yield f"data: {json.dumps({'type': 'error', 'content': item['content']})}\n\n"
                 break
+            elif item["type"] == "thinking":
+                yield f"data: {json.dumps({'type': 'thinking', 'content': item['content']})}\n\n"
+            elif item["type"] == "thinking_done":
+                yield f"data: {json.dumps({'type': 'thinking_done'})}\n\n"
             else:
                 yield f"data: {json.dumps(item)}\n\n"
 

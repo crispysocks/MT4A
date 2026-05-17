@@ -204,6 +204,8 @@ def agent_loop(messages: list, stream_callback=None, system_prompt: str = None):
                             "name": getattr(event.content_block, 'name', ''),
                             "input": "",
                         }
+                    elif block_type == "thinking":
+                        current_block = {"type": "thinking", "text": ""}
                     else:
                         current_block = None
                     if current_block:
@@ -214,7 +216,14 @@ def agent_loop(messages: list, stream_callback=None, system_prompt: str = None):
                         try:
                             text = event.delta.text
                             current_block["text"] += text
-                            stream_callback(text)
+                            stream_callback(text, "content")
+                        except AttributeError:
+                            pass
+                    elif current_block and current_block["type"] == "thinking":
+                        try:
+                            text = event.delta.thinking
+                            current_block["text"] += text
+                            stream_callback(text, "thinking")
                         except AttributeError:
                             pass
                     elif current_block and current_block["type"] == "tool_use":

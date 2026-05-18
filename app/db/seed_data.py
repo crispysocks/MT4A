@@ -3,10 +3,11 @@ Database seed data initialization.
 All default data is sourced from knowledge/raw/ documents.
 """
 import bcrypt
+from datetime import datetime
 from sqlmodel import Session, select
 from app.db.connection import engine
 from app.db.models import (
-    Course, Event, Organization, User,
+    Course, DailyReport, Event, Organization, User,
 )
 
 
@@ -259,6 +260,94 @@ def _seed_users(session: Session):
             session.add(student)
 
 
+def _seed_daily_reports(session: Session):
+    """Seed sample daily reports for employee users."""
+    users_map = {}
+    for username in ["zhangmingyang", "chensiqi", "wangjianguo"]:
+        user = session.exec(select(User).where(User.username == username)).first()
+        if user:
+            users_map[username] = user.id
+
+    reports = [
+        {
+            "user_id": users_map.get("zhangmingyang"),
+            "department": "双元制事业部",
+            "content": "今天接待了5组咨询德国双元制项目的家长和学生，其中2组当场签署了意向协议。重点介绍了机电一体化和医疗健康两个专业方向，家长对免学费和企业发放酬金的模式认可度很高。下午整理了本周的客户跟进表，发现有三组客户处于犹豫阶段，计划明天逐一电话回访，针对他们的顾虑——主要是语言关和生活适应问题——准备一份Q&A文档。",
+            "summary": "接待5组咨询，签署2份意向协议；明天计划对3组犹豫客户电话回访。",
+            "submitted_at": datetime(2026, 5, 15, 17, 30),
+        },
+        {
+            "user_id": users_map.get("zhangmingyang"),
+            "department": "双元制事业部",
+            "content": "上午参加了双元制项目课程升级讨论会，学院方面提出新增「可再生能源技术」方向。收集了目前德国合作院校的可再生能源专业设置和就业数据，整理了一份对比分析表。下午跟进上周签约的李同学的材料审核进度，德方已确认接收，下一步需要办理签证预约。另外给新入职的实习生做了双元制项目知识培训。",
+            "summary": "参加课程升级讨论，提议新增可再生能源方向；李同学材料已通过德方审核。",
+            "submitted_at": datetime(2026, 5, 16, 18, 0),
+        },
+        {
+            "user_id": users_map.get("zhangmingyang"),
+            "department": "双元制事业部",
+            "content": "今日外勤——前往深圳某职业高中开展德国双元制宣讲，到场学生约120人。宣讲效果不错，现场回收有效咨询表36份，其中机电一体化15份、酒店管理12份、医疗健康9份。与该校就业办达成初步合作意向，后续将安排专场说明会。回到办公室已六点半，整理了意向学生信息并录入CRM系统。",
+            "summary": "深圳职高宣讲120人，回收36份有效咨询表；与该校达成合作意向。",
+            "submitted_at": datetime(2026, 5, 17, 19, 0),
+        },
+        {
+            "user_id": users_map.get("chensiqi"),
+            "department": "课后服务事业部",
+            "content": "今天处理了3起家长投诉。第一起反映孩子课后作业辅导老师频繁更换，已协调安排固定老师对接；第二起关于课程费用退费问题，已向财务提交退款申请并告知家长3-5个工作日到账；第三起是老师上课迟到问题，已约谈相关老师并提出警告。同时完成了本月满意度调查问卷的设计，明天开始发放。",
+            "summary": "处理3起投诉（师资更换、退费、迟到），完成满意度问卷设计。",
+            "submitted_at": datetime(2026, 5, 15, 17, 45),
+        },
+        {
+            "user_id": users_map.get("chensiqi"),
+            "department": "课后服务事业部",
+            "content": "上午走访了合作的3家社区课后服务中心，检查课程质量和安全设施。其中一家发现消防通道堆放杂物，已要求立即整改并拍照留档。下午和教研团队讨论了暑期特色课程方案，初步确定开设「小小工程师」「少儿编程启蒙」和「非遗手工」三个主题。与市场部同步了暑期招生的宣传素材需求。",
+            "summary": "走访3家社区服务中心，发现1处安全隐患已整改；确定暑期3个特色课程主题。",
+            "submitted_at": datetime(2026, 5, 16, 17, 30),
+        },
+        {
+            "user_id": users_map.get("chensiqi"),
+            "department": "课后服务事业部",
+            "content": "今天完成满意度调查的线上发放工作，通过班级群和公众号推送，目前回收有效问卷158份。初步数据显示整体满意度88.6%，较上期提升2.3个百分点。不足之处主要集中在「课程多样性」和「课后反馈及时性」两项。已和产品团队沟通，计划引入每周学习报告自动推送功能。",
+            "summary": "满意度调查回收158份，整体满意率88.6%；计划引入每周学习报告推送。",
+            "submitted_at": datetime(2026, 5, 17, 18, 15),
+        },
+        {
+            "user_id": users_map.get("wangjianguo"),
+            "department": "智能装备事业部",
+            "content": "今天完成了智慧校园项目中AI考勤系统的联调测试。人脸识别准确率达到99.2%，但在逆光场景下下降到96.5%，已反馈算法团队优化。下午与某区教育局信息中心开视频会，演示了智慧校园一期功能模块，对方对食堂消费系统和宿舍管理系统比较感兴趣，约了下周现场演示。",
+            "summary": "AI考勤系统联调完成，正光99.2%准确率；区教育局对食堂和宿舍系统感兴趣。",
+            "submitted_at": datetime(2026, 5, 15, 18, 0),
+        },
+        {
+            "user_id": users_map.get("wangjianguo"),
+            "department": "智能装备事业部",
+            "content": "上午去合作学校现场部署智慧班牌设备，一共安装了12个教室的门禁和电子班牌终端。遇到一处在装修阶段的教室布线问题，与施工方沟通后确定了走线方案，预计下周一完成安装。下午整理设备部署手册并更新到项目文档库。另收到3家学校关于智慧食堂的咨询，已转交销售团队跟进。",
+            "summary": "完成12间教室智慧班牌安装；3家校咨询智慧食堂，已转销售。",
+            "submitted_at": datetime(2026, 5, 16, 17, 0),
+        },
+        {
+            "user_id": users_map.get("wangjianguo"),
+            "department": "智能装备事业部",
+            "content": "今天重点是新能源充电桩项目的需求评审。与甲方确认了园区充电桩布局方案，总计36个快充桩+12个慢充桩。技术层面讨论了与现有配电系统的兼容性，以及后期运维管理平台的数据对接方案。会后整理了会议纪要和项目排期，预计6月初开始施工。另外处理了2个线上运维工单。",
+            "summary": "新能源充电桩需求评审通过，36快充+12慢充；整理项目排期，6月初施工。",
+            "submitted_at": datetime(2026, 5, 17, 18, 30),
+        },
+    ]
+
+    for r in reports:
+        if r["user_id"] is None:
+            continue
+        existing = session.exec(
+            select(DailyReport).where(
+                DailyReport.user_id == r["user_id"],
+                DailyReport.content == r["content"],
+            )
+        ).first()
+        if not existing:
+            report = DailyReport(**r)
+            session.add(report)
+
+
 def seed_all():
     """Run all seed data functions. Idempotent - skips existing records."""
     with Session(engine) as session:
@@ -266,5 +355,6 @@ def seed_all():
         _seed_courses(session)
         _seed_events(session)
         _seed_users(session)
+        _seed_daily_reports(session)
         session.commit()
         print("[SEED] Default data initialized successfully.")

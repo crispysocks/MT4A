@@ -11,7 +11,6 @@ requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.102.0",
     "bcrypt>=5.0.0",
-    "chromadb>=1.5.9",
     "fastapi>=0.136.1",
     "mysql-connector-python>=9.7.0",
     "pyjwt>=2.10.0",
@@ -21,6 +20,14 @@ dependencies = [
     "python-docx>=1.2.0",
     "ollama>=0.6.2",
     "python-multipart>=0.0.29",
+    "llama-index-embeddings-dashscope==0.1.4",
+    "llama-index-readers-file==0.1.33",
+    "llama-index-postprocessor-dashscope-rerank-custom==0.1.0",
+    "faiss-cpu==1.8.0.post1",
+    "dashscope==1.20.4",
+    "llama-index-core==0.10.67",
+    "llama-index-vector-stores-faiss==0.1.2",
+    "uvicorn>=0.47.0",
 ]
 
 [dependency-groups]

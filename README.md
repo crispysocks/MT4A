@@ -10,7 +10,7 @@
 - **Todo Manager**: 内存任务跟踪，3 轮无更新时自动提醒
 - **Context Compression**: 上下文压缩（微压缩 + 自动压缩）
 - **FastAPI + SSE**: 支持流式输出的 Web API
-- **RAG 知识库**: 基于 Chroma + DashScope Embedding 的知识检索
+- **RAG 知识库**: 基于 LlamaIndex + FAISS + DashScope 的知识检索（两阶段检索）
 - **MySQL 数据库**: 通过自然语言查询数据库
 
 ## 目录结构
@@ -46,10 +46,10 @@ app/
 │   ├── connection.py   # MySQL 连接管理
 │   └── seed_data.py    # 种子数据
 ├── rag/                  # RAG 层
-│   ├── embedder.py     # Embedding 服务
-│   ├── store.py        # Chroma 向量存储
-│   ├── router.py       # KnowledgeRouter（角色级RAG隔离）
-│   └── faq_index.py    # FAQ 索引
+│   ├── engine.py       # RAGEngine（LlamaIndex + FAISS 编排）
+│   ├── ingest.py       # 知识库配置 + 一键摄入
+│   ├── router.py       # KnowledgeRouter（角色 → KB 映射）
+│   └── faq_index.py    # BM25 FAQ 索引
 └── reports/              # 报告生成层
     ├── base.py          # 报告基类
     └── generators/      # 报告生成器（员工日报/客户分析/心理周报/投诉周报）
@@ -199,7 +199,14 @@ source app/db/init_db.sql;
 
 ### RAG 知识库
 
-知识搜索使用 Chroma 向量数据库和 Embedding 服务。文档被嵌入存储，需要配置 `EMBEDDINGS_API_KEY` 和 `EMBEDDINGS_BASE_URL`。
+基于 LlamaIndex + FAISS + DashScope 的两阶段检索知识库。文档使用 SentenceSplitter 分块，DashScope 嵌入，FAISS 粗召回 + DashScopeRerank 重排序，4 个独立 KB（public/internal/business/policy）按角色隔离。
+
+初始化知识库：
+```bash
+uv run python -c "from app.rag.engine import RAGEngine; from app.rag.ingest import ingest_all; ingest_all(RAGEngine())"
+```
+
+需要配置环境变量 `DASHSCOPE_API_KEY`（或 `EMBEDDINGS_API_KEY`）。知识库存储在 `VectorStore/` 目录。
 
 ### SOUL 角色系统
 

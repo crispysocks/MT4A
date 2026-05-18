@@ -10,10 +10,13 @@ from app.agent.session import SessionManager
 from app.agent.core import agent_loop, soul_manager
 from app.agent.auth import SECRET_KEY
 from app.rag.router import KnowledgeRouter
+from app.rag.engine import RAGEngine
+from app.agent.tools.rag import set_rag_engine
 import app.rag.router as rag_router
 
 rag_router.knowledge_router = KnowledgeRouter(soul_manager)
 rag_router.knowledge_router.faq_roles = soul_manager._tool_config.get("faq_roles", [])
+set_rag_engine(RAGEngine())
 
 router = APIRouter()
 

@@ -5,7 +5,7 @@ from typing import Optional
 from rank_bm25 import BM25Okapi
 
 WORKDIR = Path.cwd()
-FAQ_PATH = WORKDIR / "knowledge" / "processed" / "company" / "public" / "faq.md"
+FAQ_PATH = WORKDIR / "knowledge" / "raw" / "公司信息" / "常见问答对.md"
 
 _index: Optional[BM25Okapi] = None
 _faqs: list[dict] = []
@@ -14,13 +14,27 @@ _faqs: list[dict] = []
 def parse_faq(md_path: Path) -> list[dict]:
     """
     Parse FAQ markdown file.
-    Format: ## question title\nanswer text\n\n
+    Supports both markdown table (| 问题 | 答案 |) and ## heading format.
     Returns list of {"question": str, "answer": str}.
     """
     content = md_path.read_text(encoding="utf-8")
-    sections = re.split(r"\n(?=#{2,3} )", content)
 
     faqs = []
+    for line in content.split("\n"):
+        line = line.strip()
+        if not line.startswith("|") or not line.endswith("|"):
+            continue
+        if "---" in line:
+            continue
+        cols = [c.strip() for c in line[1:-1].split("|")]
+        if len(cols) >= 2 and cols[0] not in ("问题", "Sheet1"):
+            faqs.append({"question": cols[0], "answer": cols[-1]})
+
+    if faqs:
+        return faqs
+
+    # Fallback: old ## heading format
+    sections = re.split(r"\n(?=#{2,3} )", content)
     for section in sections:
         section = section.strip()
         if not section:
@@ -39,6 +53,9 @@ def build():
     """Build BM25 index from FAQ file. Called at app startup."""
     global _index, _faqs
     _faqs = parse_faq(FAQ_PATH)
+    if not _faqs:
+        print("[FAQ] Warning: no FAQ entries parsed")
+        return
     tokenized = [f["question"] for f in _faqs]
     _index = BM25Okapi(tokenized)
 

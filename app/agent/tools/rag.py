@@ -1,18 +1,16 @@
-from app.rag.store import ChromaStore
 import app.rag.router as rag_router
 import app.rag.faq_index as faq_index
 
-_store = None
+_engine = None
 
-def get_store():
-    global _store
-    if _store is None:
-        _store = ChromaStore()
-    return _store
+
+def set_rag_engine(engine):
+    global _engine
+    _engine = engine
+
 
 def knowledge_search(query: str, top_k: int = 5) -> str:
-    """Search knowledge base for relevant information."""
-    store = get_store()
+    global _engine
     kr = rag_router.knowledge_router
 
     faq_answer = None
@@ -22,19 +20,23 @@ def knowledge_search(query: str, top_k: int = 5) -> str:
             faq_answer = faq_index.search(query, score_diff_threshold=5.0)
 
     if faq_answer:
-        context = (
-            f"【常见问题参考】\n"
+        return (
+            "【常见问题参考】\n"
             f"标准答案：{faq_answer}\n\n"
-            f"请以客服助手人设，将上述信息自然地回复给用户。"
+            "请以客服助手人设，将上述信息自然地回复给用户。"
         )
-        return context
 
-    where_filter = kr.build_where_filter() if kr else None
-    results = store.query(query, top_k=top_k, where=where_filter)
+    if _engine is None or kr is None:
+        return ""
+
+    kb_names = kr.get_allowed_kbs()
+    results = _engine.query(query, kb_names=kb_names, top_k=top_k)
+
     if not results:
-        return "No relevant knowledge found."
+        return ""
+
     lines = ["Knowledge search results:"]
     for i, r in enumerate(results, 1):
-        lines.append(f"\n[{i}] (relevance: {1-r['distance']:.2f})")
-        lines.append(r["content"][:500])
+        lines.append(f"\n[{i}] (score: {r['score']})")
+        lines.append(r["content"][:2000])
     return "\n".join(lines)
